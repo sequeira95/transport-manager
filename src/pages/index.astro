@@ -1,0 +1,73 @@
+---
+export const prerender = false;
+
+import Layout from '../layouts/Layout.astro';
+import TransportApp from '../components/TransportApp.vue';
+import type { Pasajero, SuscripcionPago, RutaHorario, PasajeroCompleto, Usuario } from '../types';
+import { getSessionUser } from '../lib/auth';
+
+let initialUser: Usuario | null = null;
+let initialPasajeros: PasajeroCompleto[] = [];
+
+try {
+  const session = await getSessionUser(Astro.request);
+  if (session) {
+    initialUser = {
+      id: session.id,
+      nombre: session.nombre,
+      email: session.email
+    };
+
+    const db = (Astro.locals as any)?.runtime?.env?.DB;
+    if (db) {
+      const pasajerosResult = await db
+        .prepare('SELECT * FROM pasajeros WHERE usuario_id = ? ORDER BY id DESC')
+        .bind(session.id)
+        .all();
+      
+      const suscripcionesResult = await db
+        .prepare(`
+          SELECT s.* 
+          FROM suscripciones_pagos s 
+          JOIN pasajeros p ON s.pasajero_id = p.id 
+          WHERE p.usuario_id = ?
+        `)
+        .bind(session.id)
+        .all();
+
+      const rutasResult = await db
+        .prepare(`
+          SELECT r.* 
+          FROM rutas_horarios r 
+          JOIN pasajeros p ON r.pasajero_id = p.id 
+          WHERE p.usuario_id = ? 
+          ORDER BY r.dia_semana ASC, r.hora_recogida ASC
+        `)
+        .bind(session.id)
+        .all();
+
+      const pasajeros = (pasajerosResult.results || []) as Pasajero[];
+      const suscripciones = (suscripcionesResult.results || []) as SuscripcionPago[];
+      const rutas = (rutasResult.results || []) as RutaHorario[];
+
+      initialPasajeros = pasajeros.map(p => ({
+        ...p,
+        suscripcion: suscripciones.find(s => s.pasajero_id === p.id),
+        rutas: rutas.filter(r => r.pasajero_id === p.id)
+      }));
+    }
+  }
+} catch (err) {
+  console.warn('Advertencia al precargar sesión en SSR:', err);
+}
+---
+
+<Layout title="TransportManager | Panel de Control">
+  <!-- Aplicación Reactiva Vue 3 con Header y Multi-idioma -->
+  <TransportApp 
+    client:only="vue" 
+    initialPasajeros={initialPasajeros} 
+    initialUser={initialUser} 
+  />
+</Layout>
+

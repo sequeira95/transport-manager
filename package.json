@@ -1,0 +1,41 @@
+{
+  "name": "transport-manager",
+  "type": "module",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "db:migrate:local": "wrangler d1 execute transport-manager-db --local --file=./schema.sql",
+    "db:seed:local": "wrangler d1 execute transport-manager-db --local --file=./seed.sql",
+    "db:reset:local": "wrangler d1 execute transport-manager-db --local --file=./schema.sql && wrangler d1 execute transport-manager-db --local --file=./seed.sql",
+    "db:create": "wrangler d1 create transport-manager-db",
+    "db:migrate:prod": "wrangler d1 execute transport-manager-db --remote --file=./schema.sql",
+    "db:seed:prod": "wrangler d1 execute transport-manager-db --remote --file=./seed.sql",
+    "deploy": "astro build && wrangler pages deploy dist",
+    "cap:add:android": "cap add android",
+    "cap:sync": "cap sync",
+    "cap:open:android": "cap open android"
+  },
+  "dependencies": {
+    "@astrojs/cloudflare": "^11.2.0",
+    "@astrojs/tailwind": "^5.1.5",
+    "@astrojs/vue": "^4.5.3",
+    "@capacitor/android": "^7.0.1",
+    "@capacitor/cli": "^7.0.1",
+    "@capacitor/core": "^7.0.1",
+    "astro": "^4.16.18",
+    "leaflet": "^1.9.4",
+    "lucide-vue-next": "^0.475.0",
+    "tailwindcss": "^3.4.17",
+    "vue": "^3.5.13"
+  },
+  "devDependencies": {
+    "@types/leaflet": "^1.9.16",
+    "@types/node": "^22.13.4",
+    "typescript": "^5.7.3",
+    "wrangler": "^3.109.2"
+  }
+}

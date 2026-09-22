@@ -1,0 +1,16 @@
+{
+  "appId": "com.transportmanager.app",
+  "appName": "TransportManager",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https",
+    "cleartext": true
+  },
+  "android": {
+    "buildOptions": {
+      "keystorePath": "",
+      "releaseType": "AAB"
+    }
+  }
+}
