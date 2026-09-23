@@ -58,7 +58,6 @@ const { t } = useI18n();
                 @click="emit('abrirModalCrear')"
                 class="hover:text-brand-600 dark:hover:text-brand-400 transition-colors flex items-center gap-1.5 cursor-pointer text-left"
               >
-                <span class="text-brand-600 dark:text-brand-400">＋</span>
                 <span>{{ t.footer.newPassenger }}</span>
               </button>
             </li>
@@ -68,12 +67,8 @@ const { t } = useI18n();
                 @click="emit('abrirHistorial')"
                 class="hover:text-amber-600 dark:hover:text-amber-300 transition-colors flex items-center gap-1.5 cursor-pointer text-left"
               >
-                <span class="text-amber-500 dark:text-amber-400">📜</span>
                 <span>{{ t.footer.paymentHistory }}</span>
               </button>
-            </li>
-            <li class="pt-1 text-[11px] text-slate-400 dark:text-slate-500">
-              <span>⌨️ Esc: cerrar modales</span>
             </li>
           </ul>
         </div>
@@ -86,7 +81,6 @@ const { t } = useI18n();
           
           <div class="space-y-2 text-xs">
             <div class="flex items-start gap-2 text-slate-700 dark:text-slate-300">
-              <span class="text-sm">🔒</span>
               <span class="text-[11px] leading-tight text-slate-500 dark:text-slate-400">
                 {{ t.footer.securityEncrypted }}
               </span>
@@ -111,7 +105,6 @@ const { t } = useI18n();
             </div>
 
             <div class="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5 pt-1">
-              <span>📱</span>
               <span>{{ t.footer.mobileReady }}</span>
             </div>
 
@@ -121,7 +114,6 @@ const { t } = useI18n();
               class="w-full mt-2 px-3 py-2 rounded-xl bg-gradient-to-r from-emerald-600/10 to-teal-600/10 hover:from-emerald-600/20 hover:to-teal-600/20 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 font-semibold text-xs flex items-center justify-between transition-colors cursor-pointer group"
             >
               <div class="flex items-center gap-2">
-                <span class="text-sm">🤖</span>
                 <span>{{ t.mobileApp.downloadBtn }}</span>
               </div>
               <span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 font-mono">APK</span>
@@ -145,10 +137,10 @@ const { t } = useI18n();
             @click="emit('abrirModalApp')"
             class="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors flex items-center gap-1 cursor-pointer font-medium"
           >
-            <span>🤖 Descargar APK</span>
+            <span> Descargar APK</span>
           </button>
           <span class="px-2 py-0.5 rounded-md bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 font-mono text-slate-600 dark:text-slate-300 text-[10px] shadow-sm">
-            v1.0.0 • {{ t.footer.version }}
+            v1.0.0 {{ t.footer.version }}
           </span>
         </div>
       </div>
