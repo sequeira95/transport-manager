@@ -2,6 +2,7 @@ export const prerender = false;
 import type { APIRoute } from 'astro';
 import type { Pasajero, SuscripcionPago, RutaHorario, PasajeroCompleto } from '../../types';
 import { getSessionUser } from '../../lib/auth';
+import { ensureDbSchema } from '../../lib/db';
 
 export const GET: APIRoute = async ({ request, locals }) => {
   try {
@@ -20,6 +21,8 @@ export const GET: APIRoute = async ({ request, locals }) => {
         { status: 500, headers: { 'Content-Type': 'application/json' } }
       );
     }
+
+    await ensureDbSchema(db);
 
     // 1. Obtener pasajeros del usuario autenticado
     const pasajerosResult: any = await db
@@ -99,6 +102,8 @@ export const POST: APIRoute = async ({ request, locals }) => {
         { status: 500, headers: { 'Content-Type': 'application/json' } }
       );
     }
+
+    await ensureDbSchema(db);
 
     const body = (await request.json()) as any;
     const {
@@ -235,6 +240,8 @@ export const PUT: APIRoute = async ({ request, locals }) => {
       );
     }
 
+    await ensureDbSchema(db);
+
     const body = (await request.json()) as any;
     const {
       id,
@@ -369,6 +376,7 @@ export const PATCH: APIRoute = async ({ request, locals }) => {
 
     // Actualización rápida de notificaciones
     if (notificaciones_activas !== undefined || minutos_aviso !== undefined) {
+      await ensureDbSchema(db);
       try {
         const isActiva = notificaciones_activas !== false && notificaciones_activas !== 0 && notificaciones_activas !== '0' && notificaciones_activas !== 'false';
         if (notificaciones_activas !== undefined && minutos_aviso !== undefined) {

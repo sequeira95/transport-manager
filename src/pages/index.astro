@@ -5,6 +5,7 @@ import Layout from '../layouts/Layout.astro';
 import TransportApp from '../components/TransportApp.vue';
 import type { Pasajero, SuscripcionPago, RutaHorario, PasajeroCompleto, Usuario } from '../types';
 import { getSessionUser } from '../lib/auth';
+import { ensureDbSchema } from '../lib/db';
 
 let initialUser: Usuario | null = null;
 let initialPasajeros: PasajeroCompleto[] = [];
@@ -20,6 +21,7 @@ try {
 
     const db = (Astro.locals as any)?.runtime?.env?.DB;
     if (db) {
+      await ensureDbSchema(db);
       const pasajerosResult = await db
         .prepare('SELECT * FROM pasajeros WHERE usuario_id = ? ORDER BY id DESC')
         .bind(session.id)
@@ -46,12 +48,14 @@ try {
         .bind(session.id)
         .all();
 
-      const pasajeros = (pasajerosResult.results || []) as Pasajero[];
+      const pasajeros = (pasajerosResult.results || []) as any[];
       const suscripciones = (suscripcionesResult.results || []) as SuscripcionPago[];
       const rutas = (rutasResult.results || []) as RutaHorario[];
 
       initialPasajeros = pasajeros.map(p => ({
         ...p,
+        notificaciones_activas: p.notificaciones_activas !== 0 && p.notificaciones_activas !== '0' && p.notificaciones_activas !== false && p.notificaciones_activas !== 'false',
+        minutos_aviso: p.minutos_aviso != null ? Number(p.minutos_aviso) : 30,
         suscripcion: suscripciones.find(s => s.pasajero_id === p.id),
         rutas: rutas.filter(r => r.pasajero_id === p.id)
       }));

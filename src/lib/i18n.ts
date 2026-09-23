@@ -246,7 +246,7 @@ export const dictionaries: Record<SupportedLocale, Translations> = {
       storageMode: 'Almacenamiento',
       rightsReserved: 'Todos los derechos reservados.',
       version: '',
-      mobileReady: 'Optimizado para Web y Móvil (Capacitor)'
+      mobileReady: 'Optimizado para Web y Móvil'
     },
     dashboard: {
       title: 'Gestión de Transporte & Pasajeros',
@@ -477,7 +477,7 @@ export const dictionaries: Record<SupportedLocale, Translations> = {
       storageMode: 'Storage Mode',
       rightsReserved: 'All rights reserved.',
       version: '',
-      mobileReady: 'Optimized for Web & Mobile (Capacitor)'
+      mobileReady: 'Optimized for Web & Mobile'
     },
     dashboard: {
       title: 'Transport & Passenger Management',

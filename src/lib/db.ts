@@ -12,3 +12,20 @@ export function getDB(context: APIContext | { locals?: any }) {
   }
   return env.DB as import('@cloudflare/workers-types').D1Database;
 }
+
+let columnsEnsured = false;
+
+/**
+ * Garantiza que la tabla `pasajeros` tenga las columnas `notificaciones_activas` y `minutos_aviso`
+ * ejecutando ALTER TABLE si aún no existen en la base de datos D1/SQLite local o remota.
+ */
+export async function ensureDbSchema(db: any): Promise<void> {
+  if (columnsEnsured || !db) return;
+  try {
+    await db.prepare('ALTER TABLE pasajeros ADD COLUMN notificaciones_activas INTEGER NOT NULL DEFAULT 1').run();
+  } catch {}
+  try {
+    await db.prepare('ALTER TABLE pasajeros ADD COLUMN minutos_aviso INTEGER NOT NULL DEFAULT 30').run();
+  } catch {}
+  columnsEnsured = true;
+}
