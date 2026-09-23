@@ -4,8 +4,10 @@ interface Props {
   description?: string;
 }
 
+import '../styles/global.css';
+
 const { 
-  title = "TransportManager - Gestión Integral de Transporte", 
+  title = "Passengo - Gestión Integral de Transporte", 
   description = "Sistema full-stack de administración de pasajeros, itinerarios semanales y control de cobros con Cloudflare D1." 
 } = Astro.props;
 ---
@@ -29,7 +31,6 @@ const {
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/src/styles/global.css" />
 
     <!-- Script Inline Anti-Flicker de Tema (Modo Oscuro / Claro) -->
     <script is:inline>

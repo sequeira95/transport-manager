@@ -8,8 +8,12 @@ import StatsDashboard from './StatsDashboard.vue';
 import ModalNuevoPasajero from './ModalNuevoPasajero.vue';
 import ModalHistorialPagos from './ModalHistorialPagos.vue';
 import ModalAuth from './ModalAuth.vue';
+import ModalNotificaciones from './ModalNotificaciones.vue';
+import ModalDescargaApp from './ModalDescargaApp.vue';
+import BannerDescargaApp from './BannerDescargaApp.vue';
 import { getLocalPasajeros, countLocalPasajeros, clearLocalPasajeros } from '../lib/storage';
 import { useI18n } from '../lib/i18n';
+import { useNotifications } from '../lib/notifications';
 
 const props = defineProps<{
   initialPasajeros?: PasajeroCompleto[];
@@ -31,6 +35,38 @@ const search = ref('');
 const filtroActual = ref<'todos' | 'Pendiente' | 'Pagado' | 'Vencido'>('todos');
 const modalAbierto = ref(false);
 const pasajeroEnEdicion = ref<PasajeroCompleto | null>(null);
+const modalNotificacionesAbierto = ref(false);
+const modalDescargaAppAbierto = ref(false);
+const bannerPermisosCerrado = ref(false);
+
+const { permission, requestNotificationPermission, activeInAppToast, dismissToast, startNotificationScheduler } = useNotifications();
+
+async function solicitarPermisosCompletos() {
+  try {
+    await requestNotificationPermission();
+  } catch (e) {
+    console.warn('Error solicitando permiso notificaciones:', e);
+  }
+
+  if (typeof navigator !== 'undefined' && 'geolocation' in navigator) {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        console.log('GPS inicial detectado:', pos.coords.latitude, pos.coords.longitude);
+      },
+      (err) => {
+        console.warn('GPS declinado o error:', err);
+      },
+      { timeout: 10000, enableHighAccuracy: false }
+    );
+  }
+}
+
+function cerrarBannerPermisos() {
+  bannerPermisosCerrado.value = true;
+  if (typeof sessionStorage !== 'undefined') {
+    sessionStorage.setItem('tm_banner_permisos_dismissed', '1');
+  }
+}
 
 // Estado del Modal de Historial de Pagos
 const modalHistorialAbierto = ref(false);
@@ -229,6 +265,25 @@ const pasajerosFiltrados = computed(() => {
 
 onMounted(() => {
   verificarSesion();
+
+  if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('tm_banner_permisos_dismissed')) {
+    bannerPermisosCerrado.value = true;
+  }
+
+  // Solicitar proactivamente permisos al abrir la página
+  if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
+    solicitarPermisosCompletos();
+  } else if (typeof navigator !== 'undefined' && 'geolocation' in navigator) {
+    navigator.geolocation.getCurrentPosition(() => {}, () => {}, { timeout: 10000 });
+  }
+
+  startNotificationScheduler(
+    () => pasajeros.value,
+    () => ({
+      reminderTitle: t.value.notifications.reminderNotificationTitle,
+      reminderBody: t.value.notifications.reminderNotificationBody
+    })
+  );
 });
 </script>
 
@@ -242,6 +297,7 @@ onMounted(() => {
       @abrir-modal-auth="abrirModalAuth"
       @cerrar-sesion="cerrarSesion"
       @sincronizar-locales="sincronizarLocalesDirecto"
+      @abrir-modal-notificaciones="modalNotificacionesAbierto = true"
     />
 
     <!-- CONTENEDOR PRINCIPAL -->
@@ -256,6 +312,46 @@ onMounted(() => {
           <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5 sm:mt-1">
             {{ t.dashboard.subtitle }}
           </p>
+        </div>
+      </div>
+
+      <!-- BANNER DE SOLICITUD PROACTIVA DE PERMISOS (Notificaciones & GPS) -->
+      <div 
+        v-if="permission === 'default' && !bannerPermisosCerrado"
+        class="bg-gradient-to-r from-amber-500/15 via-brand-500/10 to-transparent dark:from-amber-500/20 dark:via-slate-850 dark:to-slate-900 border border-amber-500/40 rounded-2xl p-3.5 sm:p-4 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2 duration-300"
+      >
+        <div class="flex items-start sm:items-center gap-3 min-w-0">
+          <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-500 flex items-center justify-center shrink-0 text-xl shadow-inner mt-0.5 sm:mt-0">
+            🔔
+          </div>
+          <div class="min-w-0">
+            <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5 flex-wrap">
+              <span>Habilitar Notificaciones & Ubicación GPS</span>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">Recomendado</span>
+            </h4>
+            <p class="text-[11px] sm:text-xs text-slate-600 dark:text-slate-300 mt-0.5">
+              Recibe avisos automáticos antes de la hora de recogida de cada pasajero y optimiza la precisión de tus rutas.
+            </p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end pt-1 sm:pt-0">
+          <button
+            type="button"
+            @click="cerrarBannerPermisos"
+            class="px-3 py-1.5 rounded-xl text-xs font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors cursor-pointer"
+          >
+            Más tarde
+          </button>
+          <button
+            type="button"
+            @click="solicitarPermisosCompletos"
+            class="px-4 py-2 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white shadow-md shadow-amber-500/25 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer"
+          >
+            <span>Habilitar ahora</span>
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+            </svg>
+          </button>
         </div>
       </div>
 
@@ -365,7 +461,7 @@ onMounted(() => {
           <button
             type="button"
             @click="abrirModalCrear"
-            class="flex-1 sm:flex-initial px-3 sm:px-4 py-2 sm:py-2.5 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold shadow-md shadow-brand-600/25 flex items-center justify-center gap-1.5 sm:gap-2 transition-all transform active:scale-95 cursor-pointer shrink-0"
+            class="flex-1 sm:flex-initial px-3 sm:px-4 py-2 sm:py-2.5 bg-gradient-to-r from-emerald-600 via-teal-600 to-blue-600 hover:from-emerald-500 hover:via-teal-500 hover:to-blue-500 text-white rounded-xl text-xs font-bold shadow-md shadow-teal-600/25 flex items-center justify-center gap-1.5 sm:gap-2 transition-all transform active:scale-95 cursor-pointer shrink-0"
           >
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -446,6 +542,51 @@ onMounted(() => {
         @login-success="onLoginSuccess"
       />
 
+      <!-- Modal de Notificaciones y Recordatorios de Recogida -->
+      <ModalNotificaciones
+        :is-open="modalNotificacionesAbierto"
+        :pasajeros="pasajeros"
+        @close="modalNotificacionesAbierto = false"
+      />
+
+      <!-- Modal de Descarga de la App Móvil Android (APK) -->
+      <ModalDescargaApp
+        :is-open="modalDescargaAppAbierto"
+        @close="modalDescargaAppAbierto = false"
+      />
+
+      <!-- Banner Flotante Inteligente para Dispositivos Android / Actualización -->
+      <BannerDescargaApp
+        @abrir-modal="modalDescargaAppAbierto = true"
+      />
+
+      <!-- Banner Toast In-App de Notificación Activa -->
+      <Teleport to="body">
+        <div
+          v-if="activeInAppToast"
+          class="fixed top-5 right-3 sm:right-5 z-50 max-w-sm w-full p-4 bg-white dark:bg-slate-800 border-2 border-amber-500 rounded-2xl shadow-2xl flex items-start gap-3 animate-in slide-in-from-top-4 duration-300"
+        >
+          <div class="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-500 flex items-center justify-center shrink-0 text-lg">
+            🔔
+          </div>
+          <div class="min-w-0 flex-1">
+            <h4 class="text-xs font-bold text-slate-900 dark:text-white leading-tight">
+              {{ activeInAppToast.title }}
+            </h4>
+            <p class="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-normal">
+              {{ activeInAppToast.body }}
+            </p>
+          </div>
+          <button
+            type="button"
+            @click="dismissToast"
+            class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-sm p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+          >
+            ✕
+          </button>
+        </div>
+      </Teleport>
+
     </div>
 
     <!-- FOOTER PROFESIONAL MULTI-IDIOMA CON ESTADO Y ACCESOS RÁPIDOS -->
@@ -453,6 +594,7 @@ onMounted(() => {
       :usuario-actual="usuarioActual"
       @abrir-modal-crear="abrirModalCrear"
       @abrir-historial="abrirHistorialGeneral"
+      @abrir-modal-app="modalDescargaAppAbierto = true"
     />
   </div>
 </template>

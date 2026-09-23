@@ -136,16 +136,16 @@ watch(() => props.isOpen, (open) => {
         <!-- HEADER -->
         <div class="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-white/95 dark:bg-slate-900/90 shrink-0">
           <div class="flex items-center gap-3 min-w-0">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-brand-500/20 shrink-0">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 via-teal-600 to-blue-600 flex items-center justify-center text-white shadow-md shadow-teal-500/20 shrink-0">
               <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
             </div>
-            <div class="min-w-0">
-              <h2 class="text-base font-bold text-slate-900 dark:text-white truncate">
+            <div class="min-w-0 flex-1">
+              <h2 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white leading-snug break-words">
                 {{ showMigrationPrompt ? t.modalAuth.migrationNoticeTitle : tab === 'login' ? t.modalAuth.loginTitle : t.modalAuth.registerTitle }}
               </h2>
-              <p class="text-xs text-slate-500 dark:text-slate-400 truncate">
+              <p class="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 leading-snug break-words">
                 {{ showMigrationPrompt ? '' : tab === 'login' ? t.modalAuth.loginSubtitle : t.modalAuth.registerSubtitle }}
               </p>
             </div>
@@ -252,7 +252,7 @@ watch(() => props.isOpen, (open) => {
             <button
               type="submit"
               :disabled="loading"
-              class="w-full py-3 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-brand-500/25 flex items-center justify-center gap-2 transition-all transform active:scale-98 disabled:opacity-50 cursor-pointer"
+              class="w-full py-3 bg-gradient-to-r from-emerald-600 via-teal-600 to-blue-600 hover:from-emerald-500 hover:via-teal-500 hover:to-blue-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-teal-500/25 flex items-center justify-center gap-2 transition-all transform active:scale-98 disabled:opacity-50 cursor-pointer"
             >
               <svg v-if="loading" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />

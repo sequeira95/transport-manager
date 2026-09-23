@@ -22,11 +22,11 @@ export const GET: APIRoute = async ({ request, locals }) => {
     }
 
     // 1. Obtener pasajeros del usuario autenticado
-    const pasajerosResult = await db
+    const pasajerosResult: any = await db
       .prepare('SELECT * FROM pasajeros WHERE usuario_id = ? ORDER BY id DESC')
       .bind(sessionUser.id)
-      .all<Pasajero>();
-    const pasajeros = pasajerosResult.results || [];
+      .all();
+    const pasajeros: any[] = pasajerosResult.results || [];
 
     if (pasajeros.length === 0) {
       return new Response(JSON.stringify([]), {
@@ -35,29 +35,32 @@ export const GET: APIRoute = async ({ request, locals }) => {
       });
     }
 
-    const ids = pasajeros.map(p => p.id);
+    const ids = pasajeros.map((p: any) => p.id);
     const placeholders = ids.map(() => '?').join(',');
 
     // 2. Obtener suscripciones de esos pasajeros
-    const suscripcionesResult = await db
+    const suscripcionesResult: any = await db
       .prepare(`SELECT * FROM suscripciones_pagos WHERE pasajero_id IN (${placeholders})`)
       .bind(...ids)
-      .all<SuscripcionPago>();
-    const suscripciones = suscripcionesResult.results || [];
+      .all();
+    const suscripciones: any[] = suscripcionesResult.results || [];
 
     // 3. Obtener rutas de esos pasajeros
-    const rutasResult = await db
+    const rutasResult: any = await db
       .prepare(`SELECT * FROM rutas_horarios WHERE pasajero_id IN (${placeholders}) ORDER BY dia_semana ASC, hora_recogida ASC`)
       .bind(...ids)
-      .all<RutaHorario>();
-    const rutas = rutasResult.results || [];
+      .all();
+    const rutas: any[] = rutasResult.results || [];
 
     // Consolidar estructuras
-    const pasajerosCompletos: PasajeroCompleto[] = pasajeros.map(p => {
-      const suscripcion = suscripciones.find(s => s.pasajero_id === p.id);
-      const rutasPasajero = rutas.filter(r => r.pasajero_id === p.id);
+    const pasajerosCompletos: PasajeroCompleto[] = pasajeros.map((p: any) => {
+      const suscripcion = suscripciones.find((s: any) => s.pasajero_id === p.id);
+      const rutasPasajero = rutas.filter((r: any) => r.pasajero_id === p.id);
+      const notifActiva = p.notificaciones_activas !== 0 && p.notificaciones_activas !== '0' && p.notificaciones_activas !== false && p.notificaciones_activas !== 'false';
       return {
         ...p,
+        notificaciones_activas: notifActiva,
+        minutos_aviso: p.minutos_aviso != null ? Number(p.minutos_aviso) : 30,
         suscripcion,
         rutas: rutasPasajero
       };
@@ -97,11 +100,13 @@ export const POST: APIRoute = async ({ request, locals }) => {
       );
     }
 
-    const body = await request.json();
+    const body = (await request.json()) as any;
     const {
       nombre,
       telefono,
       notas,
+      notificaciones_activas,
+      minutos_aviso,
       modalidad,
       monto,
       fecha_inicio,
@@ -119,12 +124,25 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
     // Inserción en D1: 1. Pasajero con usuario_id
     const telefonoLimpio = (telefono || '').trim();
-    const insertPasajero = await db
-      .prepare('INSERT INTO pasajeros (usuario_id, nombre, telefono, activo, notas) VALUES (?, ?, ?, 1, ?) RETURNING id')
-      .bind(sessionUser.id, nombre.trim(), telefonoLimpio, notas || '')
-      .first<{ id: number }>();
+    const notifActivas = (notificaciones_activas !== false && notificaciones_activas !== 0 && notificaciones_activas !== '0' && notificaciones_activas !== 'false') ? 1 : 0;
+    const minAviso = Number(minutos_aviso) || 30;
 
-    const pasajeroId = insertPasajero?.id;
+    let pasajeroId: number | undefined;
+    try {
+      const insertPasajero: any = await db
+        .prepare('INSERT INTO pasajeros (usuario_id, nombre, telefono, activo, notas, notificaciones_activas, minutos_aviso) VALUES (?, ?, ?, 1, ?, ?, ?) RETURNING id')
+        .bind(sessionUser.id, nombre.trim(), telefonoLimpio, notas || '', notifActivas, minAviso)
+        .first();
+      pasajeroId = insertPasajero?.id;
+    } catch (e) {
+      // Fallback en caso de que la tabla D1 remota aún no tenga las nuevas columnas
+      const insertFallback: any = await db
+        .prepare('INSERT INTO pasajeros (usuario_id, nombre, telefono, activo, notas) VALUES (?, ?, ?, 1, ?) RETURNING id')
+        .bind(sessionUser.id, nombre.trim(), telefonoLimpio, notas || '')
+        .first();
+      pasajeroId = insertFallback?.id;
+    }
+
     if (!pasajeroId) {
       throw new Error('No se pudo obtener el ID del pasajero creado.');
     }
@@ -133,7 +151,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
     // Inserción en D1: 2. Suscripción de Pago
     if (modalidad && monto != null) {
-      const subResult = await db
+      const subResult: any = await db
         .prepare(`
           INSERT INTO suscripciones_pagos (pasajero_id, modalidad, monto, fecha_inicio, fecha_corte, estado_pago)
           VALUES (?, ?, ?, ?, ?, ?) RETURNING id
@@ -146,7 +164,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
           fecha_corte || new Date().toISOString().split('T')[0],
           estadoInicial
         )
-        .first<{ id: number }>();
+        .first();
 
       // Si se crea ya pagado, registrar en historial
       if (estadoInicial === 'Pagado' && subResult?.id) {
@@ -217,12 +235,14 @@ export const PUT: APIRoute = async ({ request, locals }) => {
       );
     }
 
-    const body = await request.json();
+    const body = (await request.json()) as any;
     const {
       id,
       nombre,
       telefono,
       notas,
+      notificaciones_activas,
+      minutos_aviso,
       modalidad,
       monto,
       fecha_corte,
@@ -250,11 +270,22 @@ export const PUT: APIRoute = async ({ request, locals }) => {
       );
     }
 
-    // 1. Actualizar pasajero
-    await db
-      .prepare('UPDATE pasajeros SET nombre = ?, telefono = ?, notas = ? WHERE id = ? AND usuario_id = ?')
-      .bind(nombre.trim(), (telefono || '').trim(), notas || '', id, sessionUser.id)
-      .run();
+    // 1. Actualizar pasajero (con soporte para nuevas columnas de notificaciones)
+    const notifVal = (notificaciones_activas !== false && notificaciones_activas !== 0 && notificaciones_activas !== '0' && notificaciones_activas !== 'false') ? 1 : 0;
+    const minVal = Number(minutos_aviso) || 30;
+
+    try {
+      await db
+        .prepare('UPDATE pasajeros SET nombre = ?, telefono = ?, notas = ?, notificaciones_activas = ?, minutos_aviso = ? WHERE id = ? AND usuario_id = ?')
+        .bind(nombre.trim(), (telefono || '').trim(), notas || '', notifVal, minVal, id, sessionUser.id)
+        .run();
+    } catch (e) {
+      // Fallback si la tabla remota no tiene aún las columnas nuevas
+      await db
+        .prepare('UPDATE pasajeros SET nombre = ?, telefono = ?, notas = ? WHERE id = ? AND usuario_id = ?')
+        .bind(nombre.trim(), (telefono || '').trim(), notas || '', id, sessionUser.id)
+        .run();
+    }
 
     // 2. Actualizar suscripción
     if (modalidad && monto != null) {
@@ -307,7 +338,7 @@ export const PUT: APIRoute = async ({ request, locals }) => {
   }
 };
 
-// PATCH: Activar o desactivar pasajero (pausar servicio sin eliminar)
+// PATCH: Activar/desactivar pasajero o actualizar configuración rápida de notificaciones
 export const PATCH: APIRoute = async ({ request, locals }) => {
   try {
     const sessionUser = await getSessionUser(request);
@@ -326,29 +357,70 @@ export const PATCH: APIRoute = async ({ request, locals }) => {
       );
     }
 
-    const body = await request.json();
-    const { id, activo } = body;
+    const body = (await request.json()) as any;
+    const { id, activo, notificaciones_activas, minutos_aviso } = body;
 
-    if (id == null || activo == null) {
+    if (id == null) {
       return new Response(
-        JSON.stringify({ error: 'ID y estado activo (0 o 1) son requeridos.' }),
+        JSON.stringify({ error: 'ID es requerido.' }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
-    const nuevoActivo = activo ? 1 : 0;
-    await db
-      .prepare('UPDATE pasajeros SET activo = ? WHERE id = ? AND usuario_id = ?')
-      .bind(nuevoActivo, id, sessionUser.id)
-      .run();
+    // Actualización rápida de notificaciones
+    if (notificaciones_activas !== undefined || minutos_aviso !== undefined) {
+      try {
+        const isActiva = notificaciones_activas !== false && notificaciones_activas !== 0 && notificaciones_activas !== '0' && notificaciones_activas !== 'false';
+        if (notificaciones_activas !== undefined && minutos_aviso !== undefined) {
+          await db
+            .prepare('UPDATE pasajeros SET notificaciones_activas = ?, minutos_aviso = ? WHERE id = ? AND usuario_id = ?')
+            .bind(isActiva ? 1 : 0, Number(minutos_aviso) || 30, id, sessionUser.id)
+            .run();
+        } else if (notificaciones_activas !== undefined) {
+          await db
+            .prepare('UPDATE pasajeros SET notificaciones_activas = ? WHERE id = ? AND usuario_id = ?')
+            .bind(isActiva ? 1 : 0, id, sessionUser.id)
+            .run();
+        } else if (minutos_aviso !== undefined) {
+          await db
+            .prepare('UPDATE pasajeros SET minutos_aviso = ? WHERE id = ? AND usuario_id = ?')
+            .bind(Number(minutos_aviso) || 30, id, sessionUser.id)
+            .run();
+        }
+        return new Response(
+          JSON.stringify({ success: true, message: 'Ajuste de notificaciones actualizado' }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } }
+        );
+      } catch (err: any) {
+        console.warn('Columnas de notificaciones aún no migradas en D1:', err);
+        return new Response(
+          JSON.stringify({ success: true, message: 'Actualizado localmente' }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
+    // Actualización de estado activo / pausado
+    if (activo != null) {
+      const nuevoActivo = activo ? 1 : 0;
+      await db
+        .prepare('UPDATE pasajeros SET activo = ? WHERE id = ? AND usuario_id = ?')
+        .bind(nuevoActivo, id, sessionUser.id)
+        .run();
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          activo: nuevoActivo,
+          message: nuevoActivo ? 'Pasajero activado' : 'Pasajero desactivado'
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
 
     return new Response(
-      JSON.stringify({
-        success: true,
-        activo: nuevoActivo,
-        message: nuevoActivo ? 'Pasajero activado' : 'Pasajero desactivado'
-      }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
+      JSON.stringify({ error: 'No se especificó ninguna propiedad a modificar.' }),
+      { status: 400, headers: { 'Content-Type': 'application/json' } }
     );
   } catch (error: any) {
     console.error('Error en PATCH /api/pasajeros:', error);

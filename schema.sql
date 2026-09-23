@@ -23,6 +23,8 @@ CREATE TABLE IF NOT EXISTS pasajeros (
     telefono TEXT NOT NULL,
     activo INTEGER NOT NULL DEFAULT 1, -- 1: activo, 0: inactivo
     notas TEXT,
+    notificaciones_activas INTEGER NOT NULL DEFAULT 1, -- 1: activas, 0: desactivadas
+    minutos_aviso INTEGER NOT NULL DEFAULT 30, -- minutos previos de anticipación
     creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
 );

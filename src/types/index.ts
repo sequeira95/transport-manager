@@ -16,7 +16,31 @@ export interface Pasajero {
   telefono: string;
   activo: number;
   notas?: string;
+  notificaciones_activas?: boolean;
+  minutos_aviso?: number;
   creado_en?: string;
+}
+
+export interface NotificationConfig {
+  enabled: boolean;
+  defaultMinutesBefore: number;
+  soundEnabled: boolean;
+  inAppBannerEnabled: boolean;
+}
+
+export interface ScheduledPickupNotice {
+  pasajeroId: number;
+  pasajeroNombre: string;
+  pasajeroTelefono?: string;
+  rutaId: number;
+  diaSemana: DiaSemana;
+  horaRecogida: string;
+  puntoInicio: string;
+  puntoDestino: string;
+  minutosAviso: number;
+  minutosRestantes: number;
+  horaNotificacionStr: string;
+  esInminente: boolean;
 }
 
 export interface SuscripcionPago {

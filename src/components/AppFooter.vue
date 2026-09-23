@@ -9,6 +9,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'abrirModalCrear'): void;
   (e: 'abrirHistorial'): void;
+  (e: 'abrirModalApp'): void;
 }>();
 
 const { t } = useI18n();
@@ -24,13 +25,13 @@ const { t } = useI18n();
         <!-- COLUMNA 1: BRANDING & ESTADO EN VIVO (5 COLS) -->
         <div class="md:col-span-5 space-y-3.5">
           <div class="flex items-center gap-3">
-            <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-brand-500/25">
+            <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-600 via-teal-600 to-blue-600 flex items-center justify-center text-white shadow-md shadow-teal-500/25">
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
               </svg>
             </div>
             <span class="text-sm font-black tracking-tight text-slate-900 dark:text-white">
-              Transport<span class="text-brand-600 dark:text-brand-400">Manager</span>
+              Passen<span class="text-emerald-600 dark:text-teal-400">go</span>
             </span>
           </div>
 
@@ -113,6 +114,18 @@ const { t } = useI18n();
               <span>📱</span>
               <span>{{ t.footer.mobileReady }}</span>
             </div>
+
+            <button
+              type="button"
+              @click="emit('abrirModalApp')"
+              class="w-full mt-2 px-3 py-2 rounded-xl bg-gradient-to-r from-emerald-600/10 to-teal-600/10 hover:from-emerald-600/20 hover:to-teal-600/20 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 font-semibold text-xs flex items-center justify-between transition-colors cursor-pointer group"
+            >
+              <div class="flex items-center gap-2">
+                <span class="text-sm">🤖</span>
+                <span>{{ t.mobileApp.downloadBtn }}</span>
+              </div>
+              <span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 font-mono">APK</span>
+            </button>
           </div>
         </div>
 
@@ -123,12 +136,19 @@ const { t } = useI18n();
     <div class="border-t border-slate-200 dark:border-slate-800/80 bg-slate-100/90 dark:bg-slate-950/60 py-4">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-slate-500 dark:text-slate-400">
         <p>
-          © 2026 TransportManager. {{ t.footer.rightsReserved }}
+          © 2026 Passengo. {{ t.footer.rightsReserved }}
         </p>
 
         <div class="flex items-center gap-3">
+          <button
+            type="button"
+            @click="emit('abrirModalApp')"
+            class="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors flex items-center gap-1 cursor-pointer font-medium"
+          >
+            <span>🤖 Descargar APK</span>
+          </button>
           <span class="px-2 py-0.5 rounded-md bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 font-mono text-slate-600 dark:text-slate-300 text-[10px] shadow-sm">
-            v1.2.0 • {{ t.footer.version }}
+            v1.0.0 • {{ t.footer.version }}
           </span>
         </div>
       </div>

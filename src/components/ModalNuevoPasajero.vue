@@ -5,6 +5,7 @@ import SelectorMapaModal from './SelectorMapaModal.vue';
 import InputDireccionAutocomplete from './InputDireccionAutocomplete.vue';
 import { addLocalPasajero, updateLocalPasajero } from '../lib/storage';
 import { useI18n } from '../lib/i18n';
+import { isNotifActiva } from '../lib/notifications';
 
 const props = defineProps<{
   isOpen: boolean;
@@ -82,6 +83,8 @@ const form = ref({
   nombre: '',
   telefono: '',
   notas: '',
+  notificaciones_activas: true,
+  minutos_aviso: 30,
   modalidad: 'mensual' as ModalidadPago,
   monto: 0,
   estado_pago: 'Pendiente' as EstadoPago,
@@ -95,6 +98,8 @@ function reiniciarFormularioAFabrica() {
     nombre: '',
     telefono: '',
     notas: '',
+    notificaciones_activas: true,
+    minutos_aviso: 30,
     modalidad: 'mensual',
     monto: 0,
     estado_pago: 'Pendiente',
@@ -136,6 +141,8 @@ watch(
         nombre: p.nombre,
         telefono: p.telefono || '',
         notas: p.notas || '',
+        notificaciones_activas: isNotifActiva(p.notificaciones_activas),
+        minutos_aviso: p.minutos_aviso ?? 30,
         modalidad: p.suscripcion?.modalidad || 'mensual',
         monto: p.suscripcion?.monto || 0,
         estado_pago: p.suscripcion?.estado_pago || 'Pendiente',
@@ -567,15 +574,15 @@ watch(() => props.isOpen, (open) => {
         
         <!-- 1. HEADER STICKY (Siempre visible arriba con la X grande de cierre) -->
         <div class="shrink-0 flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur z-20">
-          <div class="flex items-center gap-2.5 min-w-0">
-            <div class="w-9 h-9 rounded-xl bg-brand-500/10 text-brand-600 dark:bg-brand-600/20 dark:text-brand-400 flex items-center justify-center text-lg border border-brand-500/20 dark:border-brand-500/30 shrink-0">
+          <div class="flex items-center gap-2.5 min-w-0 flex-1">
+            <div class="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-600 dark:bg-emerald-600/20 dark:text-emerald-400 flex items-center justify-center text-lg border border-emerald-500/20 dark:border-emerald-500/30 shrink-0">
               {{ pasajeroEditar ? '✏️' : '🚍' }}
             </div>
-            <div class="min-w-0">
-              <h2 class="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2 truncate">
+            <div class="min-w-0 flex-1">
+              <h2 class="text-sm sm:text-lg font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2 leading-snug break-words">
                 {{ pasajeroEditar ? `${t.modalPassenger.editTitle}: ${pasajeroEditar.nombre}` : t.modalPassenger.createTitle }}
               </h2>
-              <p class="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+              <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-snug break-words">
                 {{ pasajeroEditar ? 'Modifica los datos personales, plan de cobro o paradas.' : 'Registra los datos, plan de cobro y múltiples paradas por día.' }}
               </p>
             </div>
@@ -641,6 +648,56 @@ watch(() => props.isOpen, (open) => {
                 placeholder="Ej. Esperar en el portón negro, timbre 2B"
                 class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700/80 rounded-xl px-3.5 py-2 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:border-brand-500 transition-colors shadow-sm"
               />
+            </div>
+
+            <!-- SECCIÓN: RECORDATORIOS Y ALERTAS DE RECOGIDA -->
+            <div class="p-3.5 rounded-2xl bg-amber-500/5 dark:bg-slate-800/40 border border-amber-500/20 dark:border-slate-750 space-y-2.5">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="text-amber-500 text-sm">🔔</span>
+                  <span class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                    Recordatorio de Recogida
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  @click="form.notificaciones_activas = !form.notificaciones_activas"
+                  :class="[
+                    'w-10 h-6 rounded-full transition-colors relative cursor-pointer focus:outline-none shrink-0 p-0.5',
+                    form.notificaciones_activas ? 'bg-amber-500' : 'bg-slate-300 dark:bg-slate-700'
+                  ]"
+                >
+                  <div
+                    :class="[
+                      'w-5 h-5 rounded-full bg-white shadow transform transition-transform',
+                      form.notificaciones_activas ? 'translate-x-4' : 'translate-x-0'
+                    ]"
+                  ></div>
+                </button>
+              </div>
+
+              <!-- Selector de minutos si las notificaciones están activas -->
+              <div v-if="form.notificaciones_activas" class="pt-1 flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-t border-amber-500/10 dark:border-slate-700/60">
+                <span class="text-xs text-slate-600 dark:text-slate-400">
+                  Avisar con anticipación:
+                </span>
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <button
+                    v-for="min in [10, 15, 30, 45, 60]"
+                    :key="min"
+                    type="button"
+                    @click="form.minutos_aviso = min"
+                    :class="[
+                      'px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer border',
+                      form.minutos_aviso === min
+                        ? 'bg-amber-500 text-white border-amber-500 shadow-sm'
+                        : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-amber-400'
+                    ]"
+                  >
+                    {{ min }}m
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -1049,7 +1106,7 @@ watch(() => props.isOpen, (open) => {
             type="button"
             @click="handleSubmit"
             :disabled="loading"
-            class="px-6 py-2 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-bold shadow-lg shadow-brand-600/30 transition-all flex items-center gap-2 transform active:scale-95 cursor-pointer"
+            class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-blue-600 hover:from-emerald-500 hover:via-teal-500 hover:to-blue-500 text-white font-bold shadow-lg shadow-teal-600/30 transition-all flex items-center gap-2 transform active:scale-95 cursor-pointer"
           >
             <span v-if="loading" class="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
             <span>{{ loading ? 'Guardando en D1...' : (pasajeroEditar ? 'Guardar Cambios' : 'Crear Pasajero') }}</span>

@@ -175,6 +175,40 @@ export interface Translations {
     sabado: string;
     domingo: string;
   };
+  notifications: {
+    title: string;
+    subtitle: string;
+    bellTooltip: string;
+    permissionStatus: string;
+    permissionGranted: string;
+    permissionDenied: string;
+    permissionDefault: string;
+    requestPermissionBtn: string;
+    sendTestBtn: string;
+    testSent: string;
+    globalSettings: string;
+    enableNotifications: string;
+    defaultAnticipation: string;
+    minutesBefore: string;
+    soundAlerts: string;
+    inAppBanner: string;
+    todaySchedule: string;
+    noUpcomingToday: string;
+    minutesLeft: string;
+    pickupAt: string;
+    cardReminderActive: string;
+    cardReminderDisabled: string;
+    toggleCardReminder: string;
+    setLeadTime: string;
+    useGlobalDefault: string;
+    testNotificationTitle: string;
+    testNotificationBody: string;
+    reminderNotificationTitle: string;
+    reminderNotificationBody: string;
+    close: string;
+    saved: string;
+    customTime: string;
+  };
 }
 
 export const dictionaries: Record<SupportedLocale, Translations> = {
@@ -211,7 +245,7 @@ export const dictionaries: Record<SupportedLocale, Translations> = {
       securityEncrypted: 'Sesiones y claves protegidas con WebCrypto (PBKDF2)',
       storageMode: 'Almacenamiento',
       rightsReserved: 'Todos los derechos reservados.',
-      version: 'Edición Profesional',
+      version: '',
       mobileReady: 'Optimizado para Web y Móvil (Capacitor)'
     },
     dashboard: {
@@ -270,7 +304,9 @@ export const dictionaries: Record<SupportedLocale, Translations> = {
       activate: 'Activar',
       delete: 'Eliminar',
       confirmDelete: '¿Estás seguro de que deseas eliminar este pasajero? Esta acción no se puede deshacer.',
-      localBadge: 'Modo Local'
+      localBadge: 'Modo Local',
+      openInGoogleMaps: 'Abrir en Google Maps',
+      navigateStop: 'Ver en Google Maps'
     },
     modalPassenger: {
       createTitle: 'Registrar Nuevo Pasajero',
@@ -350,6 +386,61 @@ export const dictionaries: Record<SupportedLocale, Translations> = {
       viernes: 'Viernes',
       sabado: 'Sábado',
       domingo: 'Domingo'
+    },
+    notifications: {
+      title: 'Centro de Notificaciones & Recordatorios',
+      subtitle: 'Configura avisos automáticos previos a los horarios de recogida de tus pasajeros.',
+      bellTooltip: 'Configuración y avisos de recogida',
+      permissionStatus: 'Permisos del Navegador',
+      permissionGranted: 'Permitidas (Activo)',
+      permissionDenied: 'Bloqueadas por el navegador',
+      permissionDefault: 'Pendiente de autorización',
+      requestPermissionBtn: 'Habilitar Notificaciones Web',
+      sendTestBtn: 'Enviar Notificación de Prueba',
+      testSent: '¡Notificación de prueba enviada!',
+      globalSettings: 'Ajustes Generales',
+      enableNotifications: 'Activar recordatorios automáticos de recogida',
+      defaultAnticipation: 'Tiempo de anticipación por defecto',
+      minutesBefore: 'minutos antes de la hora de recogida',
+      soundAlerts: 'Sonido de campana / alerta sonora',
+      inAppBanner: 'Aviso visual en pantalla (Toast)',
+      todaySchedule: 'Horarios de Recogida Programados para Hoy',
+      noUpcomingToday: 'No hay recogidas programadas para hoy con alertas activas.',
+      minutesLeft: 'en {min} min',
+      pickupAt: 'Recogida a las {time}',
+      cardReminderActive: 'Aviso activo ({min}m antes)',
+      cardReminderDisabled: 'Avisos desactivados',
+      toggleCardReminder: 'Activar/Desactivar avisos',
+      setLeadTime: 'Anticipación del aviso',
+      useGlobalDefault: 'Usar tiempo global ({min}m)',
+      testNotificationTitle: '🔔 Passengo: Notificación de Prueba',
+      testNotificationBody: 'El sistema de recordatorios está funcionando correctamente.',
+      reminderNotificationTitle: '🔔 Recogida en {min} min: {name}',
+      reminderNotificationBody: 'A las {time} en {origin}. Destino: {destination}',
+      close: 'Cerrar',
+      saved: 'Configuración guardada correctamente',
+      customTime: 'Personalizado'
+    },
+    mobileApp: {
+      downloadTitle: 'App Móvil Passengo para Android',
+      downloadSubtitle: 'Descarga el APK para acceso rápido, funcionamiento 100% offline y recordatorios con sonido.',
+      downloadBtn: 'Descargar APK Android',
+      bannerTitle: '¿Usas Android?',
+      bannerDesc: 'Descarga la app oficial para usarla sin conexión y recibir alertas con sonido.',
+      bannerBtn: 'Descargar APK',
+      qrTitle: 'Escanea para descargar en tu teléfono',
+      qrSubtitle: 'Apunta la cámara de tu móvil para descargar directamente el instalador.',
+      howToInstall: '¿Cómo instalar en 3 sencillos pasos?',
+      step1: '1. Descarga el archivo Passengo.apk desde el botón o código QR.',
+      step2: '2. Abre el archivo. Si Android lo solicita, activa "Permitir desde esta fuente".',
+      step3: '3. Pulsa "Instalar" y ¡listo! Ya puedes acceder a tus rutas y pasajeros.',
+      updatesNoticeTitle: 'Avisos de Actualización',
+      updatesNoticeDesc: 'La aplicación te notificará en pantalla cuando haya nuevas mejoras disponibles para mantenerla al día fácilmente.',
+      updateAvailable: '¡Nueva versión disponible ({version})!',
+      updateDesc: 'Hay una nueva actualización disponible con mejoras. Pulsa para descargar e instalar.',
+      updateBtn: 'Actualizar App',
+      dismiss: 'Descartar',
+      versionInfo: 'Versión actual: {version}'
     }
   },
   en: {
@@ -385,7 +476,7 @@ export const dictionaries: Record<SupportedLocale, Translations> = {
       securityEncrypted: 'Sessions & keys protected with WebCrypto (PBKDF2)',
       storageMode: 'Storage Mode',
       rightsReserved: 'All rights reserved.',
-      version: 'Professional Edition',
+      version: '',
       mobileReady: 'Optimized for Web & Mobile (Capacitor)'
     },
     dashboard: {
@@ -444,7 +535,9 @@ export const dictionaries: Record<SupportedLocale, Translations> = {
       activate: 'Activate',
       delete: 'Delete',
       confirmDelete: 'Are you sure you want to delete this passenger? This action cannot be undone.',
-      localBadge: 'Local Mode'
+      localBadge: 'Local Mode',
+      openInGoogleMaps: 'Open in Google Maps',
+      navigateStop: 'View in Google Maps'
     },
     modalPassenger: {
       createTitle: 'Register New Passenger',
@@ -524,6 +617,61 @@ export const dictionaries: Record<SupportedLocale, Translations> = {
       viernes: 'Friday',
       sabado: 'Saturday',
       domingo: 'Sunday'
+    },
+    notifications: {
+      title: 'Notification & Reminder Center',
+      subtitle: 'Set up automated alerts prior to each passenger pickup time.',
+      bellTooltip: 'Pickup reminder settings & status',
+      permissionStatus: 'Browser Notification Permission',
+      permissionGranted: 'Allowed (Active)',
+      permissionDenied: 'Blocked by browser',
+      permissionDefault: 'Pending permission',
+      requestPermissionBtn: 'Enable Web Notifications',
+      sendTestBtn: 'Send Test Notification',
+      testSent: 'Test notification sent!',
+      globalSettings: 'General Settings',
+      enableNotifications: 'Enable automated pickup reminders',
+      defaultAnticipation: 'Default lead time',
+      minutesBefore: 'minutes before scheduled pickup',
+      soundAlerts: 'Chime sound / audible alert',
+      inAppBanner: 'On-screen toast notification',
+      todaySchedule: "Today's Scheduled Pickups",
+      noUpcomingToday: 'No pickups scheduled for today with active alerts.',
+      minutesLeft: 'in {min} min',
+      pickupAt: 'Pickup at {time}',
+      cardReminderActive: 'Alert active ({min}m before)',
+      cardReminderDisabled: 'Alerts disabled',
+      toggleCardReminder: 'Toggle alerts',
+      setLeadTime: 'Alert lead time',
+      useGlobalDefault: 'Use global default ({min}m)',
+      testNotificationTitle: '🔔 Passengo: Test Notification',
+      testNotificationBody: 'The pickup reminder system is working properly.',
+      reminderNotificationTitle: '🔔 Pickup in {min} min: {name}',
+      reminderNotificationBody: 'At {time} at {origin}. Destination: {destination}',
+      close: 'Close',
+      saved: 'Settings saved successfully',
+      customTime: 'Custom'
+    },
+    mobileApp: {
+      downloadTitle: 'Passengo Android Mobile App',
+      downloadSubtitle: 'Download the APK for faster access, 100% offline support and audible reminders.',
+      downloadBtn: 'Download Android APK',
+      bannerTitle: 'Using Android?',
+      bannerDesc: 'Download the official app to use it offline and get audible pickup alerts.',
+      bannerBtn: 'Download APK',
+      qrTitle: 'Scan to download on your phone',
+      qrSubtitle: 'Point your phone camera to download the installer directly.',
+      howToInstall: 'How to install in 3 easy steps?',
+      step1: '1. Download Passengo.apk via the button or QR code.',
+      step2: '2. Open the file. If prompted by Android, enable "Allow from this source".',
+      step3: '3. Tap "Install" and you are ready! Start managing your routes and passengers.',
+      updatesNoticeTitle: 'App Updates',
+      updatesNoticeDesc: 'The app will notify you on screen when improvements are available to keep it up to date easily.',
+      updateAvailable: 'New version available ({version})!',
+      updateDesc: 'A newer release is available with improvements. Tap to download and install.',
+      updateBtn: 'Update App',
+      dismiss: 'Dismiss',
+      versionInfo: 'Current version: {version}'
     }
   }
 };

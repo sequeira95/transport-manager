@@ -126,13 +126,13 @@ watch(() => props.isOpen, (open) => {
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
               </svg>
             </div>
-            <div class="min-w-0">
+            <div class="min-w-0 flex-1">
               <div class="flex items-center gap-2">
-                <h2 class="text-base font-bold text-slate-900 dark:text-white truncate">
+                <h2 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white leading-snug break-words">
                   {{ pasajero ? `${t.history.title}: ${pasajero.nombre}` : t.history.title }}
                 </h2>
               </div>
-              <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+              <p class="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-snug break-words">
                 {{ t.history.subtitle }}
               </p>
             </div>
@@ -176,7 +176,7 @@ watch(() => props.isOpen, (open) => {
             </div>
             <div class="bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 rounded-xl p-3.5 shadow-sm">
               <p class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{{ t.history.lastPayment }}</p>
-              <p class="text-xs font-medium text-slate-700 dark:text-slate-200 mt-1 truncate">
+              <p class="text-xs font-medium text-slate-700 dark:text-slate-200 mt-1 leading-snug break-words">
                 {{ pagos.length > 0 ? formatFechaHora(pagos[0].fecha_pago) : '--' }}
               </p>
             </div>
@@ -224,11 +224,11 @@ watch(() => props.isOpen, (open) => {
                     </span>
                   </div>
 
-                  <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-1.5 truncate">
+                  <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-1.5">
                     <svg class="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 inline shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
-                    <span class="truncate">{{ formatFechaHora(pago.fecha_pago) }}</span>
+                    <span class="break-words leading-tight">{{ formatFechaHora(pago.fecha_pago) }}</span>
                   </div>
                 </div>
               </div>

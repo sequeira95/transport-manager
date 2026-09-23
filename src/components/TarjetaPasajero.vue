@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import type { PasajeroCompleto, DiaSemana, EstadoPago } from '../types';
 import MapaRuta from './MapaRuta.vue';
-import { updateLocalPago, toggleLocalActivo, deleteLocalPasajero } from '../lib/storage';
+import { updateLocalPago, toggleLocalActivo, deleteLocalPasajero, updateLocalNotificacionesPasajero } from '../lib/storage';
 import { useI18n } from '../lib/i18n';
+import { useNotifications, isNotifActiva } from '../lib/notifications';
 
 const props = defineProps<{
   pasajero: PasajeroCompleto;
@@ -39,6 +40,126 @@ const errorMensaje = ref<string | null>(null);
 // Estado de pago y activo locales reactivos
 const estadoPagoLocal = ref<EstadoPago>(props.pasajero.suscripcion?.estado_pago || 'Pendiente');
 const activoLocal = ref<boolean>(props.pasajero.activo === 1);
+
+// Estado de notificaciones individuales de la tarjeta
+const { config: notifConfig } = useNotifications();
+const notificacionesActivas = ref<boolean>(isNotifActiva(props.pasajero.notificaciones_activas));
+const minutosAvisoLocal = ref<number>(
+  props.pasajero.minutos_aviso != null ? Number(props.pasajero.minutos_aviso) : (notifConfig.value.defaultMinutesBefore || 30)
+);
+const menuNotifAbierto = ref(false);
+const isUpdatingNotif = ref(false);
+const dropdownRef = ref<HTMLElement | null>(null);
+
+watch(
+  () => props.pasajero.notificaciones_activas,
+  (val) => {
+    notificacionesActivas.value = isNotifActiva(val);
+  }
+);
+
+watch(
+  () => props.pasajero.minutos_aviso,
+  (val) => {
+    if (val != null) {
+      minutosAvisoLocal.value = Number(val);
+    }
+  }
+);
+
+let timeoutLeave: any = null;
+
+function onMouseEnter() {
+  if (timeoutLeave) {
+    clearTimeout(timeoutLeave);
+    timeoutLeave = null;
+  }
+}
+
+function onMouseLeave() {
+  // Cierra suavemente cuando el cursor abandona el contenedor del menú
+  timeoutLeave = setTimeout(() => {
+    menuNotifAbierto.value = false;
+  }, 250);
+}
+
+function handleClickOutside(e: MouseEvent) {
+  if (menuNotifAbierto.value && dropdownRef.value && !dropdownRef.value.contains(e.target as Node)) {
+    menuNotifAbierto.value = false;
+  }
+}
+
+onMounted(() => {
+  if (typeof document !== 'undefined') {
+    document.addEventListener('click', handleClickOutside);
+  }
+});
+
+onUnmounted(() => {
+  if (typeof document !== 'undefined') {
+    document.removeEventListener('click', handleClickOutside);
+  }
+  if (timeoutLeave) {
+    clearTimeout(timeoutLeave);
+  }
+});
+
+async function alternarNotificaciones() {
+  const nuevo = !notificacionesActivas.value;
+  notificacionesActivas.value = nuevo;
+  props.pasajero.notificaciones_activas = nuevo;
+  isUpdatingNotif.value = true;
+
+  // Persistir siempre en almacenamiento local
+  updateLocalNotificacionesPasajero(props.pasajero.id, nuevo, minutosAvisoLocal.value);
+
+  // Si hay sesión en la nube, sincronizar con Cloudflare D1
+  if (!props.esModoLocal) {
+    try {
+      await fetch('/api/pasajeros', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: props.pasajero.id,
+          notificaciones_activas: nuevo ? 1 : 0
+        })
+      });
+    } catch (err) {
+      console.warn('Error alternando notificaciones en D1:', err);
+    }
+  }
+
+  isUpdatingNotif.value = false;
+}
+
+async function cambiarMinutosAviso(minutos: number) {
+  const minNum = Number(minutos);
+  minutosAvisoLocal.value = minNum;
+  props.pasajero.minutos_aviso = minNum;
+  menuNotifAbierto.value = false;
+  isUpdatingNotif.value = true;
+
+  // Persistir siempre en almacenamiento local
+  updateLocalNotificacionesPasajero(props.pasajero.id, notificacionesActivas.value, minNum);
+
+  // Si hay sesión en la nube, sincronizar con Cloudflare D1
+  if (!props.esModoLocal) {
+    try {
+      await fetch('/api/pasajeros', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: props.pasajero.id,
+          minutos_aviso: minNum
+        })
+      });
+    } catch (err) {
+      console.warn('Error actualizando minutos de aviso en D1:', err);
+    }
+  }
+
+  isUpdatingNotif.value = false;
+}
 
 // Cálculo en tiempo real de días restantes o vencimiento respecto a la fecha de corte
 const infoCorte = computed(() => {
@@ -110,6 +231,53 @@ const rutasDelDia = computed(() => {
 const diasConRuta = computed(() => {
   return new Set(props.pasajero.rutas.map(r => r.dia_semana));
 });
+
+// Enlace inteligente universal a Google Maps para la ruta del día seleccionado
+const googleMapsUrlDia = computed(() => {
+  const rutas = rutasDelDia.value;
+  if (!rutas || rutas.length === 0) return '';
+  const primera = rutas[0];
+  const ultima = rutas[rutas.length - 1];
+
+  const origin = (primera.lat_inicio != null && primera.lng_inicio != null)
+    ? `${primera.lat_inicio},${primera.lng_inicio}`
+    : encodeURIComponent(primera.punto_inicio || '');
+
+  const destination = (ultima.lat_destino != null && ultima.lng_destino != null)
+    ? `${ultima.lat_destino},${ultima.lng_destino}`
+    : encodeURIComponent(ultima.punto_destino || '');
+
+  let url = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&travelmode=driving`;
+
+  if (rutas.length > 1) {
+    const waypoints: string[] = [];
+    for (let i = 0; i < rutas.length - 1; i++) {
+      const r = rutas[i];
+      if (r.lat_destino != null && r.lng_destino != null) {
+        waypoints.push(`${r.lat_destino},${r.lng_destino}`);
+      } else if (r.punto_destino) {
+        waypoints.push(encodeURIComponent(r.punto_destino));
+      }
+    }
+    if (waypoints.length > 0) {
+      url += `&waypoints=${waypoints.join('|')}`;
+    }
+  }
+
+  return url;
+});
+
+function getGoogleMapsSingleUrl(r: RutaHorario): string {
+  const origin = (r.lat_inicio != null && r.lng_inicio != null)
+    ? `${r.lat_inicio},${r.lng_inicio}`
+    : encodeURIComponent(r.punto_inicio || '');
+
+  const destination = (r.lat_destino != null && r.lng_destino != null)
+    ? `${r.lat_destino},${r.lng_destino}`
+    : encodeURIComponent(r.punto_destino || '');
+
+  return `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&travelmode=driving`;
+}
 
 // Formateo de moneda
 function formatMonto(monto?: number): string {
@@ -289,7 +457,7 @@ const tieneTelefono = computed(() => !!props.pasajero.telefono && props.pasajero
 const whatsappUrl = computed(() => {
   if (!tieneTelefono.value) return '#';
   const numLimpio = props.pasajero.telefono.replace(/[^0-9]/g, '');
-  return `https://wa.me/${numLimpio}?text=Hola%20${encodeURIComponent(props.pasajero.nombre)},%20te%20contacto%20desde%20TransportManager`;
+  return `https://wa.me/${numLimpio}?text=Hola%20${encodeURIComponent(props.pasajero.nombre)},%20te%20contacto%20desde%20Passengo`;
 });
 </script>
 
@@ -327,7 +495,7 @@ const whatsappUrl = computed(() => {
           <div 
             :class="[
               'w-11 h-11 sm:w-12 sm:h-12 rounded-xl text-white font-bold flex items-center justify-center text-sm sm:text-base shadow-md shrink-0 transition-colors',
-              activoLocal ? 'bg-gradient-to-br from-brand-600 to-indigo-700 shadow-brand-500/20' : 'bg-slate-400 dark:bg-slate-700 text-slate-100 dark:text-slate-400 shadow-none'
+              activoLocal ? 'bg-gradient-to-br from-emerald-600 via-teal-600 to-blue-600 shadow-teal-500/20' : 'bg-slate-400 dark:bg-slate-700 text-slate-100 dark:text-slate-400 shadow-none'
             ]"
           >
             {{ iniciales }}
@@ -338,8 +506,98 @@ const whatsappUrl = computed(() => {
                 {{ pasajero.nombre }}
               </h3>
               
-              <!-- Botones de Acción: Editar, Historial y Eliminar -->
+              <!-- Botones de Acción: Editar, Historial, Notificaciones y Eliminar -->
               <div class="flex items-center gap-0.5">
+                <!-- Botón de Notificaciones con Menú Rápido (Se cierra al salir el mouse o click afuera) -->
+                <div
+                  ref="dropdownRef"
+                  class="relative"
+                  @mouseenter="onMouseEnter"
+                  @mouseleave="onMouseLeave"
+                >
+                  <button
+                    type="button"
+                    @click="menuNotifAbierto = !menuNotifAbierto"
+                    class="p-1 rounded-lg transition-colors cursor-pointer flex items-center gap-0.5"
+                    :class="[
+                      notificacionesActivas
+                        ? 'text-amber-500 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30'
+                        : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/60'
+                    ]"
+                    :title="notificacionesActivas ? `${t.notifications.cardReminderActive.replace('{min}', String(minutosAvisoLocal))}` : t.notifications.cardReminderDisabled"
+                  >
+                    <svg v-if="notificacionesActivas" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                    </svg>
+                    <svg v-else class="w-4 h-4 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                    </svg>
+                    <span v-if="notificacionesActivas" class="text-[9px] font-black leading-none px-1 py-0.5 rounded bg-amber-500/15 text-amber-600 dark:text-amber-400">
+                      {{ minutosAvisoLocal }}m
+                    </span>
+                  </button>
+
+                  <!-- Popover / Menú Desplegable de Ajuste de Minutos -->
+                  <div
+                    v-if="menuNotifAbierto"
+                    class="absolute right-0 top-full mt-1.5 w-48 max-w-[calc(100vw-2rem)] bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 py-2 z-30 animate-in fade-in zoom-in-95 duration-150"
+                  >
+                    <div class="px-3 py-1 border-b border-slate-100 dark:border-slate-750 flex items-center justify-between">
+                      <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                        {{ t.notifications.setLeadTime }}
+                      </span>
+                      <button
+                        type="button"
+                        @click="menuNotifAbierto = false"
+                        class="text-slate-400 hover:text-slate-600 dark:hover:text-white"
+                      >
+                        ×
+                      </button>
+                    </div>
+
+                    <!-- Interruptor de activar/desactivar -->
+                    <div class="px-3 py-2 border-b border-slate-100 dark:border-slate-750 flex items-center justify-between">
+                      <span class="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                        {{ notificacionesActivas ? 'Activadas' : 'Desactivadas' }}
+                      </span>
+                      <button
+                        type="button"
+                        @click="alternarNotificaciones"
+                        :class="[
+                          'w-8 h-4.5 rounded-full transition-colors relative cursor-pointer p-0.5',
+                          notificacionesActivas ? 'bg-amber-500' : 'bg-slate-300 dark:bg-slate-600'
+                        ]"
+                      >
+                        <div
+                          :class="[
+                            'w-3.5 h-3.5 rounded-full bg-white shadow transform transition-transform',
+                            notificacionesActivas ? 'translate-x-3.5' : 'translate-x-0'
+                          ]"
+                        ></div>
+                      </button>
+                    </div>
+
+                    <!-- Opciones de minutos -->
+                    <div class="p-1 space-y-0.5">
+                      <button
+                        v-for="min in [10, 15, 30, 45, 60]"
+                        :key="min"
+                        type="button"
+                        @click="cambiarMinutosAviso(min)"
+                        :class="[
+                          'w-full text-left px-3 py-1.5 rounded-xl text-xs font-medium flex items-center justify-between transition-colors cursor-pointer',
+                          minutosAvisoLocal === min && notificacionesActivas
+                            ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 font-bold'
+                            : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/60'
+                        ]"
+                      >
+                        <span>{{ min }} minutos antes</span>
+                        <span v-if="minutosAvisoLocal === min && notificacionesActivas">✓</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
                 <button
                   type="button"
                   @click="emit('editar-pasajero', pasajero)"
@@ -555,9 +813,23 @@ const whatsappUrl = computed(() => {
                 </span>
                 <span>{{ t.card.stops }} #{{ idx + 1 }}</span>
               </span>
-              <span class="bg-white dark:bg-slate-800 px-2 py-0.5 rounded text-slate-800 dark:text-white font-mono font-bold border border-slate-200 dark:border-slate-700 text-[11px] shadow-sm">
-                🕒 {{ r.hora_recogida }} hs
-              </span>
+              <div class="flex items-center gap-2">
+                <span class="bg-white dark:bg-slate-800 px-2 py-0.5 rounded text-slate-800 dark:text-white font-mono font-bold border border-slate-200 dark:border-slate-700 text-[11px] shadow-sm">
+                  🕒 {{ r.hora_recogida }} hs
+                </span>
+                <a
+                  :href="getGoogleMapsSingleUrl(r)"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="px-2 py-0.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-teal-300 font-semibold text-[10px] flex items-center gap-1 transition-colors cursor-pointer border border-emerald-500/20 shrink-0"
+                  :title="t.card.navigateStop"
+                >
+                  <span>📍 {{ t.card.navigateStop }}</span>
+                  <svg class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                </a>
+              </div>
             </div>
 
             <div class="space-y-1.5 text-[11px]">
@@ -586,17 +858,33 @@ const whatsappUrl = computed(() => {
 
       <!-- 4. Integración de Mapa Interactivo con Leaflet + OpenStreetMap -->
       <div>
-        <div class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2 flex items-center justify-between">
+        <div class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2 flex items-center justify-between gap-2 flex-wrap">
           <span class="flex items-center gap-1.5">
-            <svg class="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
             {{ t.card.weeklySchedule }}
           </span>
-          <span v-if="rutasDelDia.length > 1" class="text-[10px] text-brand-600 dark:text-brand-400 font-semibold">
-            {{ rutasDelDia.length }} {{ t.card.stops.toLowerCase() }}
-          </span>
+
+          <div class="flex items-center gap-2">
+            <span v-if="rutasDelDia.length > 1" class="text-[10px] text-slate-500 dark:text-slate-400 font-semibold">
+              {{ rutasDelDia.length }} {{ t.card.stops.toLowerCase() }}
+            </span>
+            <a
+              v-if="googleMapsUrlDia"
+              :href="googleMapsUrlDia"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gradient-to-r from-emerald-600/15 via-teal-600/15 to-blue-600/15 hover:from-emerald-600/25 hover:to-blue-600/25 text-emerald-700 dark:text-teal-300 border border-emerald-500/30 text-[11px] font-bold transition-all transform active:scale-95 shadow-sm cursor-pointer"
+              title="Abrir este recorrido completo en Google Maps"
+            >
+              <span>🗺️ {{ t.card.openInGoogleMaps }}</span>
+              <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+            </a>
+          </div>
         </div>
         <MapaRuta
           :key="`map-${pasajero.id}-${diaSeleccionado}-${rutasDelDia.length}`"

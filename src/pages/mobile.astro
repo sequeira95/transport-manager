@@ -1,0 +1,10 @@
+---
+export const prerender = true;
+
+import Layout from '../layouts/Layout.astro';
+import TransportApp from '../components/TransportApp.vue';
+---
+
+<Layout title="Passengo | App Móvil">
+  <TransportApp client:only="vue" />
+</Layout>

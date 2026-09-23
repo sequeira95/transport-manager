@@ -15,8 +15,9 @@
     "db:migrate:prod": "wrangler d1 execute transport-manager-db --remote --file=./schema.sql",
     "db:seed:prod": "wrangler d1 execute transport-manager-db --remote --file=./seed.sql",
     "deploy": "astro build && wrangler pages deploy dist",
+    "build:mobile": "astro build && node ./scripts/prepare-mobile.mjs && cap sync android",
     "cap:add:android": "cap add android",
-    "cap:sync": "cap sync",
+    "cap:sync": "node ./scripts/prepare-mobile.mjs && cap sync android",
     "cap:open:android": "cap open android"
   },
   "dependencies": {

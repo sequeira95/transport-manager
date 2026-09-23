@@ -10,7 +10,12 @@ export function getLocalPasajeros(): PasajeroCompleto[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
-    return JSON.parse(raw);
+    const list: any[] = JSON.parse(raw);
+    return list.map(p => ({
+      ...p,
+      notificaciones_activas: p.notificaciones_activas !== false && p.notificaciones_activas !== 0 && p.notificaciones_activas !== '0' && p.notificaciones_activas !== 'false',
+      minutos_aviso: p.minutos_aviso != null ? Number(p.minutos_aviso) : 30
+    }));
   } catch (err) {
     console.error('Error leyendo pasajeros locales:', err);
     return [];
@@ -48,6 +53,8 @@ export function addLocalPasajero(data: {
   fecha_inicio?: string;
   fecha_corte?: string;
   estado_pago?: EstadoPago;
+  notificaciones_activas?: boolean;
+  minutos_aviso?: number;
   rutas?: any[];
 }): PasajeroCompleto {
   const pasajeros = getLocalPasajeros();
@@ -60,6 +67,8 @@ export function addLocalPasajero(data: {
     telefono: (data.telefono || '').trim(),
     activo: 1,
     notas: data.notas || undefined,
+    notificaciones_activas: data.notificaciones_activas ?? true,
+    minutos_aviso: data.minutos_aviso ?? 30,
     creado_en: new Date().toISOString(),
     suscripcion: data.modalidad ? {
       id: nextSubId,
@@ -101,6 +110,8 @@ export function updateLocalPasajero(data: {
   monto?: number;
   fecha_corte?: string;
   estado_pago?: EstadoPago;
+  notificaciones_activas?: boolean;
+  minutos_aviso?: number;
   rutas?: any[];
 }): void {
   const pasajeros = getLocalPasajeros();
@@ -111,6 +122,12 @@ export function updateLocalPasajero(data: {
   p.nombre = data.nombre.trim();
   p.telefono = (data.telefono || '').trim();
   p.notas = data.notas || undefined;
+  if (data.notificaciones_activas !== undefined) {
+    p.notificaciones_activas = data.notificaciones_activas;
+  }
+  if (data.minutos_aviso !== undefined) {
+    p.minutos_aviso = data.minutos_aviso;
+  }
 
   if (p.suscripcion && data.modalidad) {
     p.suscripcion.modalidad = data.modalidad as any;
@@ -135,6 +152,25 @@ export function updateLocalPasajero(data: {
   }
 
   saveLocalPasajeros(pasajeros);
+}
+
+/**
+ * Alterna o actualiza la configuración de notificaciones de un pasajero local
+ */
+export function updateLocalNotificacionesPasajero(
+  id: number | string,
+  activas: boolean,
+  minutosAviso?: number
+): void {
+  const pasajeros = getLocalPasajeros();
+  const p = pasajeros.find(item => Number(item.id) === Number(id));
+  if (p) {
+    p.notificaciones_activas = Boolean(activas);
+    if (minutosAviso != null) {
+      p.minutos_aviso = Number(minutosAviso);
+    }
+    saveLocalPasajeros(pasajeros);
+  }
 }
 
 /**

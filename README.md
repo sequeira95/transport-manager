@@ -1,30 +1,48 @@
 # TransportManager 🚍
 
-Sistema Full-Stack de Gestión de Transporte, Pasajeros, Control de Cobros e Itinerarios Semanales con integración de mapas interactivos.
+Sistema Full-Stack de Gestión de Transporte, Pasajeros, Control de Cobros e Itinerarios Semanales con integración de mapas interactivos, geolocalización, modo offline y sincronización en la nube.
 
-Construido con **Astro (SSR)**, **Vue 3 (Composition API)**, **Cloudflare (Pages + D1)** y **Capacitor** para Android.
+Construido con **Astro 5 (SSR)**, **Vue 3 (Composition API)**, **Tailwind CSS**, **Cloudflare (Pages + D1)** y **Capacitor** para Android.
 
 ---
 
 ## 🌟 Características Principales
 
 1. **Tarjetas Unificadas de Pasajero:**
-   - **Información Directa:** Nombre, teléfono con enlace automático a WhatsApp y llamada telefónica directa.
-   - **Gestión Interactiva de Cobro:** Tarifa, modalidad (semanal, quincenal, mensual), fechas de corte y botón interactivo `[ Pagado / Pendiente ]` que persiste el estado en Cloudflare D1 en tiempo real.
-   - **Itinerario de Rutas Semanal:** Navegación por pestañas interactivas de días de la semana (Lunes a Domingo), mostrando horarios de recogida y direcciones.
+   - **Información Directa:** Nombre, teléfono con enlace directo a WhatsApp y llamada telefónica.
+   - **Gestión Interactiva de Cobro:** Tarifa, modalidad (semanal, quincenal, mensual), fechas de corte y botón interactivo `[ Pagado / Pendiente ]` que persiste el estado en tiempo real.
+   - **Itinerario Semanal Multidía:** Navegación por pestañas de días (Lunes a Domingo), mostrando horarios de recogida y direcciones de cada tramo.
    - **Mapa Dinámico con Leaflet + OpenStreetMap:** Marcadores visuales de recogida (verde) y destino (rojo) unidos por la traza del recorrido para el día seleccionado.
 
-2. **Panel de Métricas (Dashboard):**
-   - Conteo de pasajeros activos y registrados.
-   - Monto total pendiente de cobro y total recaudado.
-   - Filtros rápidos por estado de pago (`Todos`, `Pendientes`, `Al Día`).
+2. **Formulario Inteligente de Pasajeros:**
+   - **Autocompletado de Direcciones en Tiempo Real:** Motor Nominatim (OpenStreetMap) con priorización según GPS del dispositivo.
+   - **Ajuste Manual de Pines en Mapa:** Selector interactivo de coordenadas arrastrando los marcadores en el mapa.
+   - **Herramientas de Productividad:** Atajos de **"Copiar día"**, **"Pegar"**, **"A todos"** y **"+ Regreso invertido"** para duplicar itinerarios en segundos.
 
-3. **Arquitectura Cloudflare (100% Free Tier):**
-   - **Hosting:** Cloudflare Pages en modo SSR con Workers runtime.
-   - **Base de Datos:** Cloudflare D1 (SQLite serverless) con claves foráneas, índices de alta velocidad e historial automático de pagos.
+3. **Arquitectura de Persistencia Híbrida (Offline-First):**
+   - **Modo Invitado / Local:** Funciona inmediatamente sin registro utilizando `localStorage`.
+   - **Modo Nube (Cloudflare D1):** Base de datos SQLite serverless de alta velocidad.
+   - **Asistente de Migración:** Al iniciar sesión o registrarse, permite migrar los datos locales a la nube con un solo clic.
 
-4. **Soporte Móvil Nativo:**
-   - Configurado con Capacitor (`@capacitor/android`) listo para compilar a APK de Android en Android Studio.
+4. **Multi-idioma (i18n):**
+   - Soporte para **Español (ES)** e **Inglés (EN)** con selector interactivo y persistencia local.
+
+5. **Modo Oscuro / Modo Claro (Dark & Light Theme):**
+   - Tema adaptable con botón Sol/Luna en el Header y script anti-parpadeo.
+   - Adaptación completa en todos los componentes, modales y mapas.
+
+6. **Historial de Pagos y Recibos:**
+   - Registro de transacciones tanto general como individual por pasajero.
+   - Métricas de ingresos recaudados y conteo de cobros.
+
+7. **Sistema de Notificaciones y Recordatorios de Recogida:**
+   - Permisos nativos del navegador con Web Notifications API y alerta sonora sintetizada (Web Audio API).
+   - Botón toggle de campana individual en cada tarjeta de pasajero con selector de anticipación (10m, 15m, 30m, 45m, 60m).
+   - Centro de notificaciones (`ModalNotificaciones.vue`) con vista de paradas del día y cuenta regresiva.
+
+8. **Diseño 100% Responsivo Móvil:**
+   - Modales teletransportados al nodo raíz (`<Teleport to="body">`) con difuminado completo de fondo.
+   - Sin desbordamiento horizontal en pantallas pequeñas.
 
 ---
 
@@ -33,116 +51,53 @@ Construido con **Astro (SSR)**, **Vue 3 (Composition API)**, **Cloudflare (Pages
 ```text
 ├── src/
 │   ├── components/
-│   │   ├── MapaRuta.vue            # Componente de mapa Leaflet + OpenStreetMap
-│   │   ├── ModalNuevoPasajero.vue  # Modal para registrar nuevo pasajero, plan y parada
-│   │   ├── StatsDashboard.vue      # Métricas y barra de filtros de cobro
-│   │   ├── TarjetaPasajero.vue     # Tarjeta unificada interactiva de pasajero
-│   │   └── TransportApp.vue        # Aplicación orquestadora en Vue 3
+│   │   ├── AppHeader.vue                   # Header con selector de idioma, tema y menú de usuario
+│   │   ├── AppFooter.vue                   # Footer profesional con accesos rápidos y estado
+│   │   ├── InputDireccionAutocomplete.vue  # Autocompletado de calles con OpenStreetMap
+│   │   ├── MapaRuta.vue                    # Mapa interactivo Leaflet para tarjeta de pasajero
+│   │   ├── ModalAuth.vue                   # Modal de inicio de sesión, registro y migración
+│   │   ├── ModalHistorialPagos.vue         # Modal de historial de recibos y totales recaudados
+│   │   ├── ModalNotificaciones.vue         # Modal de configuración de notificaciones y permisos
+│   │   ├── ModalNuevoPasajero.vue          # Modal de creación y edición de pasajero e itinerarios
+│   │   ├── SelectorMapaModal.vue           # Selector y ajuste manual de pines en mapa interactivo
+│   │   ├── StatsDashboard.vue              # Dashboard con métricas de cobro y filtros rápidos
+│   │   ├── TarjetaPasajero.vue             # Tarjeta unificada interactiva de pasajero
+│   │   └── TransportApp.vue                # Orquestador principal de la aplicación en Vue 3
 │   ├── layouts/
-│   │   └── Layout.astro            # Layout SSR con meta tags para Android y dark theme
+│   │   └── Layout.astro                    # Layout HTML con script anti-flicker de tema
 │   ├── lib/
-│   │   └── db.ts                   # Helper de conexión a Cloudflare D1
+│   │   ├── auth.ts                         # Helpers de sesión y autenticación
+│   │   ├── db.ts                           # Conexión a Cloudflare D1
+│   │   ├── i18n.ts                         # Motor y diccionario de multi-idioma (ES / EN)
+│   │   ├── storage.ts                      # Manejador de persistencia en localStorage
+│   │   └── theme.ts                        # Gestor de tema claro / oscuro
 │   ├── pages/
-│   │   ├── api/
-│   │   │   ├── pasajeros.ts        # GET y POST de pasajeros y planes en D1
-│   │   │   ├── pagos/[id].ts       # PATCH para alternar [ Pagado / Pendiente ] e historial
-│   │   │   └── rutas.ts            # GET y POST de itinerarios semanales
-│   │   └── index.astro             # Página principal SSR
+│   │   ├── api/                            # Endpoints REST para Cloudflare D1
+│   │   └── index.astro                     # Página principal SSR
 │   ├── styles/
-│   │   └── global.css              # Directivas Tailwind y estilos de Leaflet
+│   │   └── global.css                      # Tailwind base y estilos personalizados
 │   └── types/
-│       └── index.ts                # Modelos e interfaces TypeScript
-├── astro.config.mjs                # Configuración Astro SSR + Cloudflare + Vue 3 + Tailwind
-├── capacitor.config.json           # Configuración de Capacitor para Android
-├── schema.sql                      # Esquema D1 optimizado con índices y claves foráneas
-├── seed.sql                        # Datos semilla de prueba
-├── wrangler.toml                   # Configuración del binding DB de Cloudflare D1
-└── package.json                    # Scripts y dependencias
+│       └── index.ts                        # Tipos e interfaces TypeScript
+├── PROJECT_CONTEXT.md                      # Documentación completa de contexto y arquitectura
+├── AGENTS.md                               # Guía operativa para agentes de IA
+├── schema.sql                              # Esquema de base de datos D1
+├── wrangler.toml                           # Configuración Cloudflare
+└── package.json
 ```
 
 ---
 
-## 🚀 Guía de Inicio Rápido
+## 🚀 Comandos de Ejecución
 
-### 1. Instalación de dependencias
 ```bash
+# Instalar dependencias
 npm install
-```
 
-### 2. Configurar la Base de Datos D1 Localmente
-Aplica el esquema y carga los datos de prueba en la base de datos D1 local:
-```bash
-# Crear las tablas
-npm run db:migrate:local
-
-# Poblar con datos iniciales (pasajeros, suscripciones y coordenadas)
-npm run db:seed:local
-```
-
-### 3. Iniciar el Servidor de Desarrollo
-```bash
+# Iniciar servidor de desarrollo local
 npm run dev
-```
-Abre en tu navegador: [http://localhost:4321](http://localhost:4321)
 
----
-
-## ☁️ Despliegue en Cloudflare (100% Gratuito)
-
-### 1. Iniciar sesión en Cloudflare CLI
-```bash
-npx wrangler login
+# Compilar para producción
+npm run build
 ```
 
-### 2. Crear la base de datos D1 en producción
-```bash
-npm run db:create
-```
-*Copia el `database_id` que te devuelva la consola y pégalo en tu archivo `wrangler.toml`.*
-
-### 3. Aplicar el esquema en producción
-```bash
-npm run db:migrate:prod
-```
-
-### 4. Desplegar la aplicación a Cloudflare Pages
-```bash
-npm run deploy
-```
-
----
-
-## 📱 Generación del APK de Android (Capacitor)
-
-1. **Construir los assets del proyecto:**
-   ```bash
-   npm run build
-   ```
-
-2. **Agregar la plataforma Android:**
-   ```bash
-   npm run cap:add:android
-   ```
-
-3. **Sincronizar cambios web con Android:**
-   ```bash
-   npm run cap:sync
-   ```
-
-4. **Abrir el proyecto en Android Studio:**
-   ```bash
-   npm run cap:open:android
-   ```
-   *Dentro de Android Studio, ve a **Build > Build Bundle(s) / APK(s) > Build APK(s)** para generar tu archivo `.apk` instalable.*
-
----
-
-## 🛡️ Endpoints API SSR
-
-| Método | Endpoint | Descripción |
-| :--- | :--- | :--- |
-| `GET` | `/api/pasajeros` | Obtiene la lista completa de pasajeros con suscripciones y rutas |
-| `POST` | `/api/pasajeros` | Registra un nuevo pasajero con su suscripción y ruta inicial |
-| `PATCH` | `/api/pagos/:id` | Alterna el estado `[ Pagado / Pendiente ]` y guarda en historial |
-| `GET` | `/api/rutas` | Consulta las paradas asignadas por pasajero o día |
-| `POST` | `/api/rutas` | Registra una nueva parada en el itinerario semanal |
+Para más detalles técnicos de arquitectura y reglas de diseño, consulta [PROJECT_CONTEXT.md](./PROJECT_CONTEXT.md).

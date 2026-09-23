@@ -1,6 +1,6 @@
 {
   "appId": "com.transportmanager.app",
-  "appName": "TransportManager",
+  "appName": "Passengo",
   "webDir": "dist",
   "bundledWebRuntime": false,
   "server": {
