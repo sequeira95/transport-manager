@@ -209,6 +209,29 @@ export interface Translations {
     saved: string;
     customTime: string;
   };
+  mobileApp: {
+    downloadTitle: string;
+    downloadSubtitle: string;
+    downloadBtn: string;
+    bannerTitle: string;
+    bannerDesc: string;
+    bannerBtn: string;
+    qrTitle: string;
+    qrSubtitle: string;
+    howToInstall: string;
+    step1: string;
+    step2: string;
+    step3: string;
+    updatesNoticeTitle: string;
+    updatesNoticeDesc: string;
+    updateAvailable: string;
+    updateDesc: string;
+    updateBtn: string;
+    dismiss: string;
+    versionInfo: string;
+    checkUpdates: string;
+    appUpToDate: string;
+  };
 }
 
 export const dictionaries: Record<SupportedLocale, Translations> = {
@@ -440,7 +463,9 @@ export const dictionaries: Record<SupportedLocale, Translations> = {
       updateDesc: 'Hay una nueva actualización disponible con mejoras. Pulsa para descargar e instalar.',
       updateBtn: 'Actualizar App',
       dismiss: 'Descartar',
-      versionInfo: 'Versión actual: {version}'
+      versionInfo: 'Versión actual: {version}',
+      checkUpdates: 'Buscar actualizaciones',
+      appUpToDate: 'App al día (v{version})'
     }
   },
   en: {
@@ -671,7 +696,9 @@ export const dictionaries: Record<SupportedLocale, Translations> = {
       updateDesc: 'A newer release is available with improvements. Tap to download and install.',
       updateBtn: 'Update App',
       dismiss: 'Dismiss',
-      versionInfo: 'Current version: {version}'
+      versionInfo: 'Current version: {version}',
+      checkUpdates: 'Check for updates',
+      appUpToDate: 'App up to date (v{version})'
     }
   }
 };

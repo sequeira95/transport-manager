@@ -1,7 +1,8 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useI18n } from '../lib/i18n';
 import { updateInfo, checkForAppUpdates, DIRECT_APK_DOWNLOAD_URL } from '../lib/appUpdater';
+import { isNativePlatform, isMobileBrowser } from '../lib/platform';
 
 const emit = defineEmits<{
   (e: 'abrirModal'): void;
@@ -10,26 +11,35 @@ const emit = defineEmits<{
 const { t } = useI18n();
 
 const visible = ref(false);
-const isAndroid = ref(false);
+const isNative = ref(false);
 
 const DISMISS_KEY = 'tm_mobile_banner_dismissed';
 
 onMounted(async () => {
   if (typeof window !== 'undefined') {
-    // Detectar si el usuario está navegando desde un dispositivo Android
-    const ua = navigator.userAgent.toLowerCase();
-    isAndroid.value = ua.includes('android');
+    isNative.value = isNativePlatform();
+    const isMobileWeb = isMobileBrowser();
 
-    const dismissed = localStorage.getItem(DISMISS_KEY);
-    // Mostrar si es Android y no ha sido descartado recientemente
-    if (isAndroid.value && !dismissed) {
-      visible.value = true;
-    }
-
-    // Comprobar si hay una actualización disponible
+    // 1. Comprobar si hay actualización disponible
     const res = await checkForAppUpdates();
     if (res?.hasUpdate) {
       visible.value = true;
+      return;
+    }
+
+    // 2. Si estamos dentro del APK nativo, NO mostrar la burbuja para descargar APK
+    if (isNative.value) {
+      visible.value = false;
+      return;
+    }
+
+    // 3. Si estamos en navegador móvil web y no se ha descartado, mostrar invitación a descargar APK
+    const dismissed = localStorage.getItem(DISMISS_KEY);
+    if (isMobileWeb && !dismissed) {
+      visible.value = true;
+    } else {
+      // En navegador de escritorio / PC: no mostrar la burbuja flotante
+      visible.value = false;
     }
   }
 });
@@ -91,6 +101,7 @@ function descartar() {
             </a>
 
             <button
+              v-if="!isNative"
               type="button"
               @click="emit('abrirModal')"
               class="px-2.5 py-1.5 rounded-xl text-[11px] font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"

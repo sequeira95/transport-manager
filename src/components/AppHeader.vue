@@ -37,13 +37,13 @@ function handleCerrarSesion() {
     <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2 sm:gap-3">
       
       <!-- LOGO & BRANDING -->
-      <div class="flex items-center gap-2 sm:gap-3 min-w-0">
-        <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-emerald-600 via-teal-600 to-blue-600 flex items-center justify-center text-white shadow-lg shadow-teal-500/25 shrink-0">
-          <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+        <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-emerald-600 via-teal-600 to-blue-600 flex items-center justify-center text-white shadow-lg shadow-teal-500/25 shrink-0">
+          <svg class="w-4 h-4 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
           </svg>
         </div>
-        <div class="min-w-0">
+        <div class="shrink-0">
           <div class="flex items-center gap-1.5 sm:gap-2">
             <span class="text-base sm:text-lg font-black tracking-tight text-slate-900 dark:text-white flex items-center whitespace-nowrap">
               Passen<span class="text-emerald-600 dark:text-teal-400">go</span>
@@ -88,24 +88,24 @@ function handleCerrarSesion() {
       </div>
 
       <!-- ACCIONES DERECHA: SELECTOR DE IDIOMA, BOTÓN TEMA Y PERFIL DE USUARIO -->
-      <div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+      <div class="flex items-center gap-1 sm:gap-2 shrink-0">
         
         <!-- SELECTOR DE IDIOMA MULTI-LENGUAJE (COMPACTO ES / EN) -->
         <div class="relative">
-          <div class="flex items-center gap-1 sm:gap-1.5 px-2 py-1.5 sm:py-2 bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800/90 dark:hover:bg-slate-750 border border-slate-300/80 dark:border-slate-700/80 rounded-xl text-xs text-slate-700 dark:text-slate-200 transition-all focus-within:border-emerald-500 shadow-sm">
-            <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600 dark:text-teal-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div class="flex items-center gap-1 px-1.5 sm:px-2 py-1.5 sm:py-2 bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800/90 dark:hover:bg-slate-750 border border-slate-300/80 dark:border-slate-700/80 rounded-xl text-xs text-slate-700 dark:text-slate-200 transition-all focus-within:border-emerald-500 shadow-sm">
+            <svg class="hidden sm:block w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600 dark:text-teal-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <select
               :value="locale"
               @change="(e: any) => setLocale(e.target.value)"
-              class="bg-transparent text-xs font-black text-slate-800 dark:text-white focus:outline-none cursor-pointer appearance-none pr-3 uppercase tracking-wider"
+              class="bg-transparent text-[11px] sm:text-xs font-black text-slate-800 dark:text-white focus:outline-none cursor-pointer appearance-none pr-3 uppercase tracking-wider"
               aria-label="Idioma / Language"
             >
               <option value="es" class="bg-white text-slate-900 dark:bg-slate-900 dark:text-white py-1">ES</option>
               <option value="en" class="bg-white text-slate-900 dark:bg-slate-900 dark:text-white py-1">EN</option>
             </select>
-            <svg class="w-2.5 h-2.5 text-slate-400 absolute right-1.5 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg class="w-2.5 h-2.5 text-slate-400 absolute right-1 sm:right-1.5 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
             </svg>
           </div>
@@ -202,16 +202,18 @@ function handleCerrarSesion() {
         </div>
 
         <!-- USUARIO INVITADO / MODO LOCAL: BOTÓN INICIAR SESIÓN -->
-        <div v-else class="flex items-center gap-2">
+        <div v-else class="flex items-center">
           <button
             type="button"
             @click="emit('abrirModalAuth')"
-            class="px-2.5 sm:px-3.5 py-1.5 sm:py-2 bg-gradient-to-r from-emerald-600 via-teal-600 to-blue-600 hover:from-emerald-500 hover:via-teal-500 hover:to-blue-500 text-white rounded-xl text-xs font-bold shadow-md shadow-teal-600/25 flex items-center gap-1.5 transition-all transform active:scale-95 cursor-pointer"
+            class="px-2 sm:px-3.5 py-1.5 sm:py-2 bg-gradient-to-r from-emerald-600 via-teal-600 to-blue-600 hover:from-emerald-500 hover:via-teal-500 hover:to-blue-500 text-white rounded-xl text-xs font-bold shadow-md shadow-teal-600/25 flex items-center gap-1 sm:gap-1.5 transition-all transform active:scale-95 cursor-pointer whitespace-nowrap"
+            :title="t.header.signIn"
           >
-            <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
             </svg>
-            <span>{{ t.header.signIn }}</span>
+            <span class="hidden sm:inline">{{ t.header.signIn }}</span>
+            <span class="sm:hidden text-[11px]">{{ locale === 'es' ? 'Entrar' : 'Login' }}</span>
           </button>
         </div>
 

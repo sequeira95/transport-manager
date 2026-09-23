@@ -1,6 +1,9 @@
 <script setup lang="ts">
+import { ref, onMounted } from 'vue';
 import type { Usuario } from '../types';
 import { useI18n } from '../lib/i18n';
+import { isNativePlatform } from '../lib/platform';
+import { updateInfo, checkForAppUpdates } from '../lib/appUpdater';
 
 const props = defineProps<{
   usuarioActual: Usuario | null;
@@ -13,6 +16,30 @@ const emit = defineEmits<{
 }>();
 
 const { t } = useI18n();
+
+const isNative = ref(false);
+const checkingUpdate = ref(false);
+const updateMessage = ref<string | null>(null);
+
+onMounted(async () => {
+  isNative.value = isNativePlatform();
+  if (isNative.value) {
+    await checkForAppUpdates();
+  }
+});
+
+async function handleCheckUpdate() {
+  checkingUpdate.value = true;
+  updateMessage.value = null;
+  const res = await checkForAppUpdates();
+  checkingUpdate.value = false;
+  if (!res?.hasUpdate) {
+    updateMessage.value = t.value.mobileApp.appUpToDate.replace('{version}', res?.currentVersion || '1.0.0');
+    setTimeout(() => {
+      updateMessage.value = null;
+    }, 4000);
+  }
+}
 </script>
 
 <template>
@@ -108,7 +135,36 @@ const { t } = useI18n();
               <span>{{ t.footer.mobileReady }}</span>
             </div>
 
+            <!-- En APK: Si hay actualización disponible -->
+            <a
+              v-if="isNative && updateInfo?.hasUpdate"
+              :href="updateInfo.downloadUrl"
+              target="_blank"
+              class="w-full mt-2 px-3 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs flex items-center justify-between shadow-md shadow-emerald-600/25 transition-all cursor-pointer animate-pulse"
+            >
+              <div class="flex items-center gap-2">
+                <span>🔄 {{ t.mobileApp.updateBtn }}</span>
+              </div>
+              <span class="text-[10px] px-1.5 py-0.5 rounded bg-white/20 text-white font-mono">v{{ updateInfo.latestVersion }}</span>
+            </a>
+
+            <!-- En APK: Si no hay actualización, botón para verificar -->
             <button
+              v-else-if="isNative"
+              type="button"
+              @click="handleCheckUpdate"
+              :disabled="checkingUpdate"
+              class="w-full mt-2 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800/80 dark:hover:bg-slate-750 border border-slate-300/80 dark:border-slate-700/80 text-slate-700 dark:text-slate-300 font-semibold text-xs flex items-center justify-between transition-colors cursor-pointer"
+            >
+              <div class="flex items-center gap-2">
+                <span>{{ checkingUpdate ? 'Verificando...' : (updateMessage || t.mobileApp.checkUpdates) }}</span>
+              </div>
+              <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-mono">APK</span>
+            </button>
+
+            <!-- En Web: Botón Descargar APK (Abre modal con instrucciones y QR) -->
+            <button
+              v-else
               type="button"
               @click="emit('abrirModalApp')"
               class="w-full mt-2 px-3 py-2 rounded-xl bg-gradient-to-r from-emerald-600/10 to-teal-600/10 hover:from-emerald-600/20 hover:to-teal-600/20 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 font-semibold text-xs flex items-center justify-between transition-colors cursor-pointer group"
@@ -132,13 +188,26 @@ const { t } = useI18n();
         </p>
 
         <div class="flex items-center gap-3">
+          <!-- En Web: Botón Descargar APK -->
           <button
+            v-if="!isNative"
             type="button"
             @click="emit('abrirModalApp')"
             class="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors flex items-center gap-1 cursor-pointer font-medium"
           >
-            <span> Descargar APK</span>
+            <span>Descargar APK</span>
           </button>
+
+          <!-- En APK: Si hay actualización disponible, enlace directo -->
+          <a
+            v-else-if="updateInfo?.hasUpdate"
+            :href="updateInfo.downloadUrl"
+            target="_blank"
+            class="text-emerald-600 dark:text-teal-400 hover:underline flex items-center gap-1 cursor-pointer font-bold animate-pulse"
+          >
+            <span>🔄 Actualizar (v{{ updateInfo.latestVersion }})</span>
+          </a>
+
           <span class="px-2 py-0.5 rounded-md bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 font-mono text-slate-600 dark:text-slate-300 text-[10px] shadow-sm">
             v1.0.0 {{ t.footer.version }}
           </span>
