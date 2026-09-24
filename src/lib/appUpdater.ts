@@ -24,7 +24,7 @@ export interface AppUpdaterPluginInterface {
 
 export const NativeAppUpdater = registerPlugin<AppUpdaterPluginInterface>('AppUpdaterPlugin');
 
-export const CURRENT_VERSION = 'v1.0.1';
+export const CURRENT_VERSION = 'v1.0.2';
 const REPO_RELEASES_URL = 'https://api.github.com/repos/sequeira95/transport-manager/releases/latest';
 export const DIRECT_APK_DOWNLOAD_URL = 'https://github.com/sequeira95/transport-manager/releases/latest/download/Passengo.apk';
 
@@ -72,7 +72,7 @@ export async function checkForAppUpdates(): Promise<AppUpdateInfo | null> {
       return null;
     }
 
-    const data = await res.json();
+    const data = (await res.json()) as any;
     const tagName = data.tag_name || '';
     const releaseBody = data.body || '';
     const publishedAt = data.published_at || '';

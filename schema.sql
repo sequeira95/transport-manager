@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
     email TEXT NOT NULL UNIQUE,
     password_hash TEXT NOT NULL,
     salt TEXT NOT NULL,
+    email_verificado INTEGER NOT NULL DEFAULT 0, -- 0: pendiente de confirmación, 1: verificado
     creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -70,6 +71,17 @@ CREATE TABLE IF NOT EXISTS historial_pagos (
     FOREIGN KEY (suscripcion_id) REFERENCES suscripciones_pagos(id) ON DELETE CASCADE
 );
 
+-- 6. Tabla de Códigos de Verificación OTP (Registro y Recuperación de Contraseña)
+CREATE TABLE IF NOT EXISTS codigos_verificacion (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT NOT NULL,
+    codigo TEXT NOT NULL, -- Código de 6 dígitos numéricos
+    tipo TEXT NOT NULL CHECK(tipo IN ('registro', 'recuperacion')),
+    expira_en DATETIME NOT NULL,
+    usado INTEGER NOT NULL DEFAULT 0,
+    creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Índices de optimización de consultas
 CREATE INDEX IF NOT EXISTS idx_usuarios_email ON usuarios(email);
 CREATE INDEX IF NOT EXISTS idx_pasajeros_usuario ON pasajeros(usuario_id);
@@ -78,3 +90,5 @@ CREATE INDEX IF NOT EXISTS idx_suscripciones_estado ON suscripciones_pagos(estad
 CREATE INDEX IF NOT EXISTS idx_rutas_pasajero ON rutas_horarios(pasajero_id);
 CREATE INDEX IF NOT EXISTS idx_rutas_dia ON rutas_horarios(dia_semana);
 CREATE INDEX IF NOT EXISTS idx_historial_suscripcion ON historial_pagos(suscripcion_id);
+CREATE INDEX IF NOT EXISTS idx_codigos_email_tipo ON codigos_verificacion(email, tipo, usado);
+

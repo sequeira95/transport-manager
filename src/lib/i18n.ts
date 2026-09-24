@@ -95,6 +95,8 @@ export interface Translations {
     delete: string;
     confirmDelete: string;
     localBadge: string;
+    openInGoogleMaps: string;
+    navigateStop: string;
   };
   modalPassenger: {
     createTitle: string;
@@ -149,6 +151,26 @@ export interface Translations {
     migrationNoticeDesc: string;
     migrateYes: string;
     migrateNo: string;
+    forgotPasswordLink: string;
+    forgotPasswordTitle: string;
+    forgotPasswordSubtitle: string;
+    sendResetCodeBtn: string;
+    verifyEmailTitle: string;
+    verifyEmailSubtitle: string;
+    otpCodeLabel: string;
+    otpCodePlaceholder: string;
+    newPasswordLabel: string;
+    newPasswordPlaceholder: string;
+    confirmPasswordLabel: string;
+    confirmPasswordPlaceholder: string;
+    verifyAndLoginBtn: string;
+    resetPasswordBtn: string;
+    resendCodeBtn: string;
+    resendWait: string;
+    backToLogin: string;
+    codeSentSuccess: string;
+    passwordsDoNotMatch: string;
+    resetSuccess: string;
   };
   history: {
     title: string;
@@ -234,6 +256,23 @@ export interface Translations {
     versionInfo: string;
     checkUpdates: string;
     appUpToDate: string;
+    modalUpdateTitle: string;
+    modalUpdateSubtitle: string;
+    versionChange: string;
+    releaseNotesTitle: string;
+    noReleaseNotes: string;
+    inAppUpdateDesc: string;
+    downloadAndInstallBtn: string;
+    downloadingProgress: string;
+    installingStatus: string;
+    installingHint: string;
+    permissionNeededTitle: string;
+    permissionNeededDesc: string;
+    openSettingsBtn: string;
+    updateErrorTitle: string;
+    retryBtn: string;
+    fallbackDownloadBtn: string;
+    readyToInstall: string;
   };
 }
 
@@ -386,7 +425,27 @@ export const dictionaries: Record<SupportedLocale, Translations> = {
       migrationNoticeTitle: '¿Sincronizar datos locales a la nube?',
       migrationNoticeDesc: 'Tienes {count} pasajero(s) guardados en este equipo. ¿Deseas subirlos ahora a tu cuenta de la nube?',
       migrateYes: 'Sí, sincronizar a la nube',
-      migrateNo: 'No por ahora'
+      migrateNo: 'No por ahora',
+      forgotPasswordLink: '¿Olvidaste tu contraseña?',
+      forgotPasswordTitle: 'Recuperar Contraseña',
+      forgotPasswordSubtitle: 'Te enviaremos un código de 6 dígitos a tu correo.',
+      sendResetCodeBtn: 'Enviar Código de Recuperación',
+      verifyEmailTitle: 'Verifica tu Correo',
+      verifyEmailSubtitle: 'Ingresa el código de 6 dígitos que enviamos a {email}.',
+      otpCodeLabel: 'Código de 6 dígitos',
+      otpCodePlaceholder: '123456',
+      newPasswordLabel: 'Nueva Contraseña',
+      newPasswordPlaceholder: 'Mínimo 6 caracteres',
+      confirmPasswordLabel: 'Confirmar Contraseña',
+      confirmPasswordPlaceholder: 'Repite tu nueva contraseña',
+      verifyAndLoginBtn: 'Confirmar y Entrar',
+      resetPasswordBtn: 'Restablecer e Iniciar Sesión',
+      resendCodeBtn: 'Reenviar código',
+      resendWait: 'Reenviar en {sec}s',
+      backToLogin: 'Volver a Iniciar Sesión',
+      codeSentSuccess: '¡Código enviado! Revisa tu bandeja de entrada o spam.',
+      passwordsDoNotMatch: 'Las contraseñas no coinciden.',
+      resetSuccess: 'Contraseña cambiada exitosamente.'
     },
     history: {
       title: 'Historial de Cobros y Recibos',
@@ -471,6 +530,7 @@ export const dictionaries: Record<SupportedLocale, Translations> = {
       dismiss: 'Descartar',
       versionInfo: 'Versión actual: {version}',
       appUpToDate: 'App al día (v{version})',
+      checkUpdates: 'Buscar actualizaciones',
       modalUpdateTitle: 'Actualización Disponible',
       modalUpdateSubtitle: 'Una nueva versión de Passengo está lista para ti.',
       versionChange: 'Versión actual: {from} ➔ Nueva: {to}',
@@ -638,7 +698,27 @@ export const dictionaries: Record<SupportedLocale, Translations> = {
       migrationNoticeTitle: 'Sync local data to cloud?',
       migrationNoticeDesc: 'You have {count} passenger(s) saved on this device. Would you like to upload them to your cloud account now?',
       migrateYes: 'Yes, sync to cloud',
-      migrateNo: 'Not now'
+      migrateNo: 'Not now',
+      forgotPasswordLink: 'Forgot your password?',
+      forgotPasswordTitle: 'Reset Password',
+      forgotPasswordSubtitle: 'We will send a 6-digit code to your email.',
+      sendResetCodeBtn: 'Send Recovery Code',
+      verifyEmailTitle: 'Verify Your Email',
+      verifyEmailSubtitle: 'Enter the 6-digit code sent to {email}.',
+      otpCodeLabel: '6-Digit Code',
+      otpCodePlaceholder: '123456',
+      newPasswordLabel: 'New Password',
+      newPasswordPlaceholder: 'Minimum 6 characters',
+      confirmPasswordLabel: 'Confirm Password',
+      confirmPasswordPlaceholder: 'Repeat your new password',
+      verifyAndLoginBtn: 'Confirm & Sign In',
+      resetPasswordBtn: 'Reset & Sign In',
+      resendCodeBtn: 'Resend code',
+      resendWait: 'Resend in {sec}s',
+      backToLogin: 'Back to Sign In',
+      codeSentSuccess: 'Code sent! Check your inbox or spam folder.',
+      passwordsDoNotMatch: 'Passwords do not match.',
+      resetSuccess: 'Password reset successfully.'
     },
     history: {
       title: 'Payment & Receipt History',
@@ -723,6 +803,7 @@ export const dictionaries: Record<SupportedLocale, Translations> = {
       dismiss: 'Dismiss',
       versionInfo: 'Current version: {version}',
       appUpToDate: 'App up to date (v{version})',
+      checkUpdates: 'Check for updates',
       modalUpdateTitle: 'Update Available',
       modalUpdateSubtitle: 'A new version of Passengo is ready for you.',
       versionChange: 'Current: {from} ➔ New: {to}',

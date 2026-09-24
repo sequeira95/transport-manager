@@ -1,10 +1,12 @@
 export const prerender = false;
 import type { APIRoute } from 'astro';
-import { hashPassword, createSessionToken, createCookieHeader } from '../../../lib/auth';
+import { hashPassword } from '../../../lib/auth';
+import { enviarCodigoEmail } from '../../../lib/email';
 
 export const POST: APIRoute = async ({ request, locals }) => {
   try {
-    const db = (locals as any)?.runtime?.env?.DB;
+    const env = (locals as any)?.runtime?.env;
+    const db = env?.DB;
 
     if (!db) {
       return new Response(
@@ -39,61 +41,84 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
     const emailNormalizado = email.trim().toLowerCase();
 
-    // 1. Verificar si el correo ya existe
-    const usuarioExistente = await db
-      .prepare('SELECT id FROM usuarios WHERE email = ?')
+    // 1. Verificar si el usuario ya existe
+    const usuarioExistente: any = await db
+      .prepare('SELECT id, email_verificado FROM usuarios WHERE email = ?')
       .bind(emailNormalizado)
       .first();
 
-    if (usuarioExistente) {
-      return new Response(
-        JSON.stringify({ error: 'Ya existe una cuenta registrada con este correo electrónico.' }),
-        { status: 409, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // 2. Hashear contraseña
     const { hash, salt } = await hashPassword(password);
 
-    // 3. Crear usuario en D1
-    const result = await db
-      .prepare(`
-        INSERT INTO usuarios (nombre, email, password_hash, salt)
-        VALUES (?, ?, ?, ?)
-      `)
-      .bind(nombre.trim(), emailNormalizado, hash, salt)
+    if (usuarioExistente) {
+      // Si la cuenta ya está verificada, no se puede duplicar
+      if (usuarioExistente.email_verificado === 1) {
+        return new Response(
+          JSON.stringify({ error: 'Ya existe una cuenta verificada con este correo electrónico.' }),
+          { status: 409, headers: { 'Content-Type': 'application/json' } }
+        );
+      } else {
+        // Si existía pero no estaba verificada, actualizamos datos y contraseña
+        await db
+          .prepare(`
+            UPDATE usuarios
+            SET nombre = ?, password_hash = ?, salt = ?
+            WHERE id = ?
+          `)
+          .bind(nombre.trim(), hash, salt, usuarioExistente.id)
+          .run();
+      }
+    } else {
+      // 2. Crear nuevo usuario en D1 con email_verificado = 0
+      await db
+        .prepare(`
+          INSERT INTO usuarios (nombre, email, password_hash, salt, email_verificado)
+          VALUES (?, ?, ?, ?, 0)
+        `)
+        .bind(nombre.trim(), emailNormalizado, hash, salt)
+        .run();
+    }
+
+    // 3. Generar código OTP criptográficamente seguro de 6 dígitos
+    const randomArray = new Uint32Array(1);
+    crypto.getRandomValues(randomArray);
+    const codigo = (100000 + (randomArray[0] % 900000)).toString();
+
+    // 4. Invalidar códigos previos de registro para este email
+    await db
+      .prepare(`UPDATE codigos_verificacion SET usado = 1 WHERE email = ? AND tipo = 'registro'`)
+      .bind(emailNormalizado)
       .run();
 
-    const nuevoUsuario: any = await db
-      .prepare('SELECT id, nombre, email, creado_en FROM usuarios WHERE email = ?')
-      .bind(emailNormalizado)
-      .first();
+    // 5. Guardar nuevo código con expiración de 15 minutos
+    await db
+      .prepare(`
+        INSERT INTO codigos_verificacion (email, codigo, tipo, expira_en)
+        VALUES (?, ?, 'registro', datetime('now', '+15 minutes'))
+      `)
+      .bind(emailNormalizado, codigo)
+      .run();
 
-    // 4. Crear token de sesión
-    const token = await createSessionToken({
-      userId: nuevoUsuario.id,
-      email: nuevoUsuario.email,
-      nombre: nuevoUsuario.nombre
+    // 6. Enviar correo (Gmail Webhook, Resend o mock dev)
+    await enviarCodigoEmail({
+      email: emailNormalizado,
+      nombre: nombre.trim(),
+      codigo,
+      tipo: 'registro',
+      gmailWebhookUrl: env?.GMAIL_WEBHOOK_URL,
+      resendApiKey: env?.RESEND_API_KEY,
+      emailFrom: env?.EMAIL_FROM
     });
-
-    const cookieHeader = createCookieHeader(token);
 
     return new Response(
       JSON.stringify({
         success: true,
-        user: {
-          id: nuevoUsuario.id,
-          nombre: nuevoUsuario.nombre,
-          email: nuevoUsuario.email
-        },
-        token
+        requiresVerification: true,
+        email: emailNormalizado,
+        message: 'Código de verificación enviado a tu correo.'
       }),
       {
         status: 201,
-        headers: {
-          'Content-Type': 'application/json',
-          'Set-Cookie': cookieHeader
-        }
+        headers: { 'Content-Type': 'application/json' }
       }
     );
   } catch (error: any) {

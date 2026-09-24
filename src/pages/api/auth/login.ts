@@ -27,7 +27,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
     // 1. Buscar usuario
     const usuario: any = await db
-      .prepare('SELECT id, nombre, email, password_hash, salt FROM usuarios WHERE email = ?')
+      .prepare('SELECT id, nombre, email, password_hash, salt, email_verificado FROM usuarios WHERE email = ?')
       .bind(emailNormalizado)
       .first();
 
@@ -44,6 +44,18 @@ export const POST: APIRoute = async ({ request, locals }) => {
       return new Response(
         JSON.stringify({ error: 'Correo o contraseña incorrectos.' }),
         { status: 401, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // 2.1 Verificar si la cuenta requiere verificación por correo
+    if (usuario.email_verificado === 0) {
+      return new Response(
+        JSON.stringify({
+          error: 'Por favor confirma tu cuenta con el código de 6 dígitos enviado a tu correo.',
+          requiresVerification: true,
+          email: usuario.email
+        }),
+        { status: 403, headers: { 'Content-Type': 'application/json' } }
       );
     }
 

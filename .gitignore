@@ -13,6 +13,9 @@ dist/
 # Environment variables & secrets
 .env
 .env.*
+.env.vars
+.dev.vars
+.dev.vars.*
 !.env.example
 
 # Operating System files
