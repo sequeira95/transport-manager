@@ -6,6 +6,7 @@ import InputDireccionAutocomplete from './InputDireccionAutocomplete.vue';
 import { addLocalPasajero, updateLocalPasajero } from '../lib/storage';
 import { useI18n } from '../lib/i18n';
 import { isNotifActiva } from '../lib/notifications';
+import { apiFetch } from '../lib/api';
 
 const props = defineProps<{
   isOpen: boolean;
@@ -515,7 +516,7 @@ async function handleSubmit() {
     const url = '/api/pasajeros';
     const method = isEdit ? 'PUT' : 'POST';
 
-    const res = await fetch(url, {
+    const res = await apiFetch(url, {
       method,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)

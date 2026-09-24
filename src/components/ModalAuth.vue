@@ -2,6 +2,7 @@
 import { ref, watch } from 'vue';
 import type { Usuario } from '../types';
 import { useI18n } from '../lib/i18n';
+import { apiFetch } from '../lib/api';
 
 const props = defineProps<{
   isOpen: boolean;
@@ -68,7 +69,7 @@ async function handleSubmit() {
       body.nombre = nombre.value;
     }
 
-    const res = await fetch(endpoint, {
+    const res = await apiFetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)

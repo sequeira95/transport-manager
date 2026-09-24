@@ -5,6 +5,7 @@ import MapaRuta from './MapaRuta.vue';
 import { updateLocalPago, toggleLocalActivo, deleteLocalPasajero, updateLocalNotificacionesPasajero } from '../lib/storage';
 import { useI18n } from '../lib/i18n';
 import { useNotifications, isNotifActiva } from '../lib/notifications';
+import { apiFetch } from '../lib/api';
 
 const props = defineProps<{
   pasajero: PasajeroCompleto;
@@ -116,7 +117,7 @@ async function alternarNotificaciones() {
   // Si hay sesión en la nube, sincronizar con Cloudflare D1
   if (!props.esModoLocal) {
     try {
-      await fetch('/api/pasajeros', {
+      await apiFetch('/api/pasajeros', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -145,7 +146,7 @@ async function cambiarMinutosAviso(minutos: number) {
   // Si hay sesión en la nube, sincronizar con Cloudflare D1
   if (!props.esModoLocal) {
     try {
-      await fetch('/api/pasajeros', {
+      await apiFetch('/api/pasajeros', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -331,7 +332,7 @@ async function alternarEstadoPago() {
   }
 
   try {
-    const res = await fetch(`/api/pagos/${props.pasajero.suscripcion.id}`, {
+    const res = await apiFetch(`/api/pagos/${props.pasajero.suscripcion.id}`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json'
@@ -386,7 +387,7 @@ async function alternarActivo() {
   }
 
   try {
-    const res = await fetch('/api/pasajeros', {
+    const res = await apiFetch('/api/pasajeros', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -426,7 +427,7 @@ async function eliminarPasajero() {
   }
 
   try {
-    const res = await fetch(`/api/pasajeros?id=${props.pasajero.id}`, {
+    const res = await apiFetch(`/api/pasajeros?id=${props.pasajero.id}`, {
       method: 'DELETE'
     });
     if (res.ok) {

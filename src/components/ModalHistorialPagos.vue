@@ -2,6 +2,7 @@
 import { ref, computed, watch } from 'vue';
 import type { PasajeroCompleto, HistorialPago } from '../types';
 import { useI18n } from '../lib/i18n';
+import { apiFetch } from '../lib/api';
 
 const props = defineProps<{
   isOpen: boolean;
@@ -40,7 +41,7 @@ async function cargarHistorial() {
     if (props.pasajero?.id) {
       url += `?pasajero_id=${props.pasajero.id}`;
     }
-    const res = await fetch(url);
+    const res = await apiFetch(url);
     if (!res.ok) {
       throw new Error('Error al consultar historial.');
     }

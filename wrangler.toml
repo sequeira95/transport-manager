@@ -1,10 +1,10 @@
-name = "transport-manager"
+name = "passengo"
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
 pages_build_output_dir = "dist"
 
 [[d1_databases]]
 binding = "DB"
-database_name = "transport-manager-db"
-database_id = "transport-manager-d1-local"
+database_name = "passengo-db"
+database_id = "4687825b-cd23-4826-86f7-009106d7a2c3"
 migrations_dir = "migrations"

@@ -15,6 +15,7 @@ import { getLocalPasajeros, countLocalPasajeros, clearLocalPasajeros } from '../
 import { useI18n } from '../lib/i18n';
 import { useNotifications } from '../lib/notifications';
 import { isNativePlatform } from '../lib/platform';
+import { apiFetch } from '../lib/api';
 
 const props = defineProps<{
   initialPasajeros?: PasajeroCompleto[];
@@ -107,7 +108,7 @@ async function cargarPasajeros() {
   loading.value = true;
   try {
     if (usuarioActual.value) {
-      const res = await fetch('/api/pasajeros');
+      const res = await apiFetch('/api/pasajeros');
       if (res.ok) {
         const data = (await res.json()) as PasajeroCompleto[];
         pasajeros.value = data;
@@ -125,7 +126,7 @@ async function cargarPasajeros() {
 
 async function verificarSesion() {
   try {
-    const res = await fetch('/api/auth/me');
+    const res = await apiFetch('/api/auth/me');
     if (res.ok) {
       const data = (await res.json()) as { authenticated?: boolean; user?: Usuario };
       if (data.authenticated && data.user) {
@@ -146,7 +147,7 @@ async function sincronizarLocalesDirecto() {
   const locales = getLocalPasajeros();
   if (locales.length > 0 && usuarioActual.value) {
     try {
-      const res = await fetch('/api/auth/migrar-locales', {
+      const res = await apiFetch('/api/auth/migrar-locales', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pasajeros: locales })
@@ -174,7 +175,7 @@ async function onLoginSuccess(payload: { user: Usuario; migrarLocales: boolean }
     const locales = getLocalPasajeros();
     if (locales.length > 0) {
       try {
-        const res = await fetch('/api/auth/migrar-locales', {
+        const res = await apiFetch('/api/auth/migrar-locales', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ pasajeros: locales })
@@ -199,7 +200,7 @@ async function onLoginSuccess(payload: { user: Usuario; migrarLocales: boolean }
 
 async function cerrarSesion() {
   try {
-    await fetch('/api/auth/logout', { method: 'POST' });
+    await apiFetch('/api/auth/logout', { method: 'POST' });
     localStorage.removeItem('tm_auth_token');
     usuarioActual.value = null;
     await cargarPasajeros();
