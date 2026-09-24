@@ -82,11 +82,11 @@ export async function autoPromptNotificationPermissionIfNative(): Promise<void> 
   try {
     await ensureAndroidNotificationChannel();
     const status = await LocalNotifications.checkPermissions();
-    if (status.display === 'prompt' || status.display === 'prompt-with-rationale') {
+    if (status.display !== 'granted') {
       const res = await LocalNotifications.requestPermissions();
       permission.value = res.display === 'granted' ? 'granted' : 'denied';
     } else {
-      permission.value = status.display === 'granted' ? 'granted' : 'denied';
+      permission.value = 'granted';
     }
   } catch (err) {
     console.warn('Error al auto-solicitar permisos en nativo:', err);

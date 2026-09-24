@@ -14,6 +14,7 @@ import BannerDescargaApp from './BannerDescargaApp.vue';
 import { getLocalPasajeros, countLocalPasajeros, clearLocalPasajeros } from '../lib/storage';
 import { useI18n } from '../lib/i18n';
 import { useNotifications } from '../lib/notifications';
+import { isNativePlatform } from '../lib/platform';
 
 const props = defineProps<{
   initialPasajeros?: PasajeroCompleto[];
@@ -49,20 +50,6 @@ const {
 } = useNotifications();
 
 let stopScheduler: (() => void) | null = null;
-
-onMounted(() => {
-  // En app móvil nativa, solicitar permiso automáticamente si aún no se ha consultado
-  autoPromptNotificationPermissionIfNative();
-
-  // Iniciar scheduler de recordatorios automáticos de recogida
-  stopScheduler = startNotificationScheduler(
-    () => pasajeros.value,
-    () => ({
-      reminderTitle: t.value.notifications.reminderNotificationTitle,
-      reminderBody: t.value.notifications.reminderNotificationBody
-    })
-  );
-});
 
 onUnmounted(() => {
   if (stopScheduler) {
@@ -292,27 +279,45 @@ const pasajerosFiltrados = computed(() => {
   });
 });
 
-onMounted(() => {
+onMounted(async () => {
   verificarSesion();
 
   if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('tm_banner_permisos_dismissed')) {
     bannerPermisosCerrado.value = true;
   }
 
-  // Solicitar proactivamente permisos al abrir la página
-  if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
-    solicitarPermisosCompletos();
-  } else if (typeof navigator !== 'undefined' && 'geolocation' in navigator) {
-    navigator.geolocation.getCurrentPosition(() => {}, () => {}, { timeout: 10000 });
-  }
-
-  startNotificationScheduler(
+  // Iniciar scheduler de recordatorios automáticos de recogida
+  stopScheduler = startNotificationScheduler(
     () => pasajeros.value,
     () => ({
       reminderTitle: t.value.notifications.reminderNotificationTitle,
       reminderBody: t.value.notifications.reminderNotificationBody
     })
   );
+
+  // Solicitar permisos al inicio según la plataforma
+  if (isNativePlatform()) {
+    // En APK móvil (Android): pedir primero y de inmediato el permiso de Notificaciones
+    try {
+      await autoPromptNotificationPermissionIfNative();
+    } catch (e) {
+      console.warn('Error solicitando permisos de notificación en APK:', e);
+    }
+
+    // Solicitar GPS posteriormente para que ambos diálogos del sistema no colisionen
+    setTimeout(() => {
+      if (typeof navigator !== 'undefined' && 'geolocation' in navigator) {
+        navigator.geolocation.getCurrentPosition(() => {}, () => {}, { timeout: 10000 });
+      }
+    }, 1200);
+  } else {
+    // En navegador Web (PC o móvil)
+    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
+      solicitarPermisosCompletos();
+    } else if (typeof navigator !== 'undefined' && 'geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(() => {}, () => {}, { timeout: 10000 });
+    }
+  }
 });
 </script>
 

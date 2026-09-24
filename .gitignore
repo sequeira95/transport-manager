@@ -22,6 +22,9 @@ Thumbs.db
 # IDE & editors
 .vscode/
 .idea/
+.settings/
+*.project
+*.classpath
 *.swp
 *.swo
 
