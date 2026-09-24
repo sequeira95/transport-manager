@@ -10,6 +10,7 @@ import ModalHistorialPagos from './ModalHistorialPagos.vue';
 import ModalAuth from './ModalAuth.vue';
 import ModalNotificaciones from './ModalNotificaciones.vue';
 import ModalDescargaApp from './ModalDescargaApp.vue';
+import ModalActualizacionApp from './ModalActualizacionApp.vue';
 import BannerDescargaApp from './BannerDescargaApp.vue';
 import { getLocalPasajeros, countLocalPasajeros, clearLocalPasajeros } from '../lib/storage';
 import { useI18n } from '../lib/i18n';
@@ -589,6 +590,9 @@ onMounted(async () => {
         :is-open="modalDescargaAppAbierto"
         @close="modalDescargaAppAbierto = false"
       />
+
+      <!-- Modal de Actualización In-App Inteligente (Con descarga en caché y progreso) -->
+      <ModalActualizacionApp />
 
       <!-- Banner Flotante Inteligente para Dispositivos Android / Actualización -->
       <BannerDescargaApp

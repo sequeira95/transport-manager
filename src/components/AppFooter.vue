@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue';
 import type { Usuario } from '../types';
 import { useI18n } from '../lib/i18n';
 import { isNativePlatform } from '../lib/platform';
-import { updateInfo, checkForAppUpdates } from '../lib/appUpdater';
+import { updateInfo, checkForAppUpdates, openUpdateModal } from '../lib/appUpdater';
 
 const props = defineProps<{
   usuarioActual: Usuario | null;
@@ -33,7 +33,9 @@ async function handleCheckUpdate() {
   updateMessage.value = null;
   const res = await checkForAppUpdates();
   checkingUpdate.value = false;
-  if (!res?.hasUpdate) {
+  if (res?.hasUpdate) {
+    openUpdateModal();
+  } else {
     updateMessage.value = t.value.mobileApp.appUpToDate.replace('{version}', res?.currentVersion || '1.0.0');
     setTimeout(() => {
       updateMessage.value = null;
@@ -136,17 +138,17 @@ async function handleCheckUpdate() {
             </div>
 
             <!-- En APK: Si hay actualización disponible -->
-            <a
+            <button
               v-if="isNative && updateInfo?.hasUpdate"
-              :href="updateInfo.downloadUrl"
-              target="_blank"
+              type="button"
+              @click="openUpdateModal()"
               class="w-full mt-2 px-3 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs flex items-center justify-between shadow-md shadow-emerald-600/25 transition-all cursor-pointer animate-pulse"
             >
               <div class="flex items-center gap-2">
                 <span>🔄 {{ t.mobileApp.updateBtn }}</span>
               </div>
               <span class="text-[10px] px-1.5 py-0.5 rounded bg-white/20 text-white font-mono">v{{ updateInfo.latestVersion }}</span>
-            </a>
+            </button>
 
             <!-- En APK: Si no hay actualización, botón para verificar -->
             <button
@@ -198,15 +200,15 @@ async function handleCheckUpdate() {
             <span>Descargar APK</span>
           </button>
 
-          <!-- En APK: Si hay actualización disponible, enlace directo -->
-          <a
+          <!-- En APK: Si hay actualización disponible, botón para abrir modal -->
+          <button
             v-else-if="updateInfo?.hasUpdate"
-            :href="updateInfo.downloadUrl"
-            target="_blank"
+            type="button"
+            @click="openUpdateModal()"
             class="text-emerald-600 dark:text-teal-400 hover:underline flex items-center gap-1 cursor-pointer font-bold animate-pulse"
           >
             <span>🔄 Actualizar (v{{ updateInfo.latestVersion }})</span>
-          </a>
+          </button>
 
           <span class="px-2 py-0.5 rounded-md bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 font-mono text-slate-600 dark:text-slate-300 text-[10px] shadow-sm">
             v1.0.0 {{ t.footer.version }}

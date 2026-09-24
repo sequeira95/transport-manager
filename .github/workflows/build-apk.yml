@@ -55,18 +55,23 @@ jobs:
         run: |
           cp android/app/build/outputs/apk/debug/app-debug.apk Passengo.apk
 
+      - name: Obtener version del proyecto
+        id: pkg_version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "tag=v$VERSION" >> $GITHUB_OUTPUT
+
       - name: Publicar o Actualizar Release en GitHub
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: latest
-          name: 'Passengo Android (Ultima version)'
+          tag_name: ${{ steps.pkg_version.outputs.tag }}
+          name: 'Passengo Android ${{ steps.pkg_version.outputs.tag }}'
           body: |
-            ### 📱 Passengo para Android
-            Esta version se compila y actualiza automaticamente con cada cambio en el repositorio.
+            ### 📱 Passengo para Android (${{ steps.pkg_version.outputs.tag }})
+            Esta version incluye las ultimas mejoras y optimizaciones del sistema.
             
             - **Descarga directa:** Haz clic en `Passengo.apk` para instalar.
             - **Compatibilidad:** Android 8.0 o superior.
-            - **Soporte:** Modo offline local y sincronizacion en la nube con Cloudflare D1.
             - **Compilacion:** ${{ github.sha }}
           files: Passengo.apk
           prerelease: false

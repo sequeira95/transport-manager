@@ -470,8 +470,24 @@ export const dictionaries: Record<SupportedLocale, Translations> = {
       updateBtn: 'Actualizar App',
       dismiss: 'Descartar',
       versionInfo: 'Versión actual: {version}',
-      checkUpdates: 'Buscar actualizaciones',
-      appUpToDate: 'App al día (v{version})'
+      appUpToDate: 'App al día (v{version})',
+      modalUpdateTitle: 'Actualización Disponible',
+      modalUpdateSubtitle: 'Una nueva versión de Passengo está lista para ti.',
+      versionChange: 'Versión actual: {from} ➔ Nueva: {to}',
+      releaseNotesTitle: 'Novedades de esta versión',
+      noReleaseNotes: 'Mejoras de rendimiento y correcciones generales.',
+      inAppUpdateDesc: 'La actualización se descargará directamente en la memoria temporal de la app sin duplicar archivos ni llenar tu carpeta de descargas.',
+      downloadAndInstallBtn: 'Descargar e Instalar Ahora',
+      downloadingProgress: 'Descargando actualización ({percent}%)...',
+      installingStatus: 'Abriendo instalador del sistema Android...',
+      installingHint: 'Por favor confirma la instalación cuando aparezca la ventana de Android.',
+      permissionNeededTitle: 'Permiso necesario',
+      permissionNeededDesc: 'Para actualizar la app directamente, debes habilitar el permiso "Instalar aplicaciones desconocidas" para Passengo.',
+      openSettingsBtn: 'Abrir Ajustes de Android',
+      updateErrorTitle: 'Error al actualizar',
+      retryBtn: 'Reintentar',
+      fallbackDownloadBtn: 'Descargar con navegador web',
+      readyToInstall: 'Descarga completa. Listo para instalar.'
     }
   },
   en: {
@@ -706,8 +722,24 @@ export const dictionaries: Record<SupportedLocale, Translations> = {
       updateBtn: 'Update App',
       dismiss: 'Dismiss',
       versionInfo: 'Current version: {version}',
-      checkUpdates: 'Check for updates',
-      appUpToDate: 'App up to date (v{version})'
+      appUpToDate: 'App up to date (v{version})',
+      modalUpdateTitle: 'Update Available',
+      modalUpdateSubtitle: 'A new version of Passengo is ready for you.',
+      versionChange: 'Current: {from} ➔ New: {to}',
+      releaseNotesTitle: 'What\'s new in this release',
+      noReleaseNotes: 'Performance improvements and bug fixes.',
+      inAppUpdateDesc: 'The update will be downloaded directly to temporary app cache without duplicating files or cluttering your Downloads folder.',
+      downloadAndInstallBtn: 'Download & Install Now',
+      downloadingProgress: 'Downloading update ({percent}%)...',
+      installingStatus: 'Launching Android package installer...',
+      installingHint: 'Please confirm the installation when the Android prompt appears.',
+      permissionNeededTitle: 'Permission Required',
+      permissionNeededDesc: 'To update the app directly, please enable "Install unknown apps" for Passengo in Android Settings.',
+      openSettingsBtn: 'Open Android Settings',
+      updateErrorTitle: 'Update Error',
+      retryBtn: 'Retry',
+      fallbackDownloadBtn: 'Download via web browser',
+      readyToInstall: 'Download complete. Ready to install.'
     }
   }
 };

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useI18n } from '../lib/i18n';
-import { updateInfo, checkForAppUpdates, DIRECT_APK_DOWNLOAD_URL } from '../lib/appUpdater';
+import { updateInfo, checkForAppUpdates, DIRECT_APK_DOWNLOAD_URL, openUpdateModal, cleanUpdateCache } from '../lib/appUpdater';
 import { isNativePlatform, isMobileBrowser } from '../lib/platform';
 
 const emit = defineEmits<{
@@ -19,6 +19,9 @@ onMounted(async () => {
   if (typeof window !== 'undefined') {
     isNative.value = isNativePlatform();
     const isMobileWeb = isMobileBrowser();
+
+    // Limpiar caché vieja si la hubiera al iniciar
+    cleanUpdateCache();
 
     // 1. Comprobar si hay actualización disponible
     const res = await checkForAppUpdates();
@@ -89,19 +92,34 @@ function descartar() {
           </p>
 
           <div class="mt-2.5 flex items-center gap-2">
+            <!-- Si hay actualización: abre el modal interactivo de actualización in-app -->
+            <button
+              v-if="updateInfo?.hasUpdate"
+              type="button"
+              @click="openUpdateModal()"
+              class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-sm shadow-emerald-600/20 flex items-center gap-1.5 transition-colors cursor-pointer"
+            >
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              <span>{{ t.mobileApp.updateBtn }}</span>
+            </button>
+
+            <!-- Si NO hay actualización (invitación a descargar APK en móvil web) -->
             <a
-              :href="updateInfo?.downloadUrl || DIRECT_APK_DOWNLOAD_URL"
+              v-else
+              :href="DIRECT_APK_DOWNLOAD_URL"
               target="_blank"
               class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-sm shadow-emerald-600/20 flex items-center gap-1.5 transition-colors cursor-pointer"
             >
               <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
               </svg>
-              <span>{{ updateInfo?.hasUpdate ? t.mobileApp.updateBtn : t.mobileApp.bannerBtn }}</span>
+              <span>{{ t.mobileApp.bannerBtn }}</span>
             </a>
 
             <button
-              v-if="!isNative"
+              v-if="!isNative && !updateInfo?.hasUpdate"
               type="button"
               @click="emit('abrirModal')"
               class="px-2.5 py-1.5 rounded-xl text-[11px] font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
