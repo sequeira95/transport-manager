@@ -42,14 +42,22 @@ function handleBackdropClick(e: MouseEvent) {
   isMouseDownOnBackdrop.value = false;
 }
 
+function reiniciarFormulario() {
+  nombre.value = '';
+  email.value = '';
+  password.value = '';
+  showPassword.value = false;
+  errorMessage.value = null;
+  loading.value = false;
+  showMigrationPrompt.value = false;
+  loggedUser.value = null;
+}
+
 watch(
   () => props.isOpen,
   (abierto) => {
     if (abierto) {
-      errorMessage.value = null;
-      loading.value = false;
-      showMigrationPrompt.value = false;
-      loggedUser.value = null;
+      reiniciarFormulario();
     }
   }
 );
