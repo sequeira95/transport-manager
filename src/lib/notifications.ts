@@ -1,5 +1,7 @@
 import { ref, computed } from 'vue';
 import type { PasajeroCompleto, DiaSemana, NotificationConfig, ScheduledPickupNotice } from '../types';
+import { LocalNotifications } from '@capacitor/local-notifications';
+import { isNativePlatform } from './platform';
 
 const STORAGE_CONFIG_KEY = 'tm_notifications_config_v1';
 const FIRED_TODAY_PREFIX = 'tm_notif_fired_';
@@ -17,6 +19,80 @@ const config = ref<NotificationConfig>({ ...defaultConfig });
 const permission = ref<NotificationPermission>('default');
 const activeInAppToast = ref<{ title: string; body: string; id: number } | null>(null);
 
+let channelInitialized = false;
+
+/**
+ * Registra el canal de notificaciones en Android con alta prioridad y sonido
+ */
+export async function ensureAndroidNotificationChannel(): Promise<void> {
+  if (channelInitialized || typeof window === 'undefined' || !isNativePlatform()) return;
+  try {
+    await LocalNotifications.createChannel({
+      id: 'passengo_reminders',
+      name: 'Recordatorios de Recogida',
+      description: 'Avisos y recordatorios de transporte de pasajeros',
+      importance: 5,
+      visibility: 1,
+      vibration: true,
+    });
+    channelInitialized = true;
+  } catch (err) {
+    console.warn('Error al crear canal de notificaciones en Android:', err);
+  }
+}
+
+/**
+ * Consulta el estado actual de los permisos de notificación (nativo o navegador)
+ */
+export async function checkNotificationPermission(): Promise<NotificationPermission> {
+  if (typeof window === 'undefined') return 'denied';
+
+  if (isNativePlatform()) {
+    try {
+      await ensureAndroidNotificationChannel();
+      const status = await LocalNotifications.checkPermissions();
+      if (status.display === 'granted') {
+        permission.value = 'granted';
+      } else if (status.display === 'denied') {
+        permission.value = 'denied';
+      } else {
+        permission.value = 'default';
+      }
+      return permission.value;
+    } catch (err) {
+      console.warn('Error al verificar permisos nativos:', err);
+      return 'default';
+    }
+  }
+
+  if ('Notification' in window) {
+    permission.value = Notification.permission;
+    return Notification.permission;
+  }
+
+  return 'denied';
+}
+
+/**
+ * Solicita los permisos automáticamente al abrir la app móvil en el teléfono si aún no han sido concedidos
+ */
+export async function autoPromptNotificationPermissionIfNative(): Promise<void> {
+  if (typeof window === 'undefined' || !isNativePlatform()) return;
+
+  try {
+    await ensureAndroidNotificationChannel();
+    const status = await LocalNotifications.checkPermissions();
+    if (status.display === 'prompt' || status.display === 'prompt-with-rationale') {
+      const res = await LocalNotifications.requestPermissions();
+      permission.value = res.display === 'granted' ? 'granted' : 'denied';
+    } else {
+      permission.value = status.display === 'granted' ? 'granted' : 'denied';
+    }
+  } catch (err) {
+    console.warn('Error al auto-solicitar permisos en nativo:', err);
+  }
+}
+
 // Inicializar en cliente
 if (typeof window !== 'undefined') {
   try {
@@ -28,7 +104,9 @@ if (typeof window !== 'undefined') {
     console.warn('Error cargando configuración de notificaciones:', err);
   }
 
-  if ('Notification' in window) {
+  if (isNativePlatform()) {
+    checkNotificationPermission();
+  } else if ('Notification' in window) {
     permission.value = Notification.permission;
   }
 }
@@ -103,10 +181,28 @@ export function playNotificationSound(): void {
 }
 
 /**
- * Solicita permisos de notificación al navegador
+ * Solicita permisos de notificación al usuario (vía Capacitor nativo en Android o API Notification web)
  */
 export async function requestNotificationPermission(): Promise<NotificationPermission> {
-  if (typeof window === 'undefined' || !('Notification' in window)) {
+  if (typeof window === 'undefined') {
+    return 'denied';
+  }
+
+  if (isNativePlatform()) {
+    try {
+      await ensureAndroidNotificationChannel();
+      const res = await LocalNotifications.requestPermissions();
+      const granted = res.display === 'granted';
+      permission.value = granted ? 'granted' : 'denied';
+      return permission.value;
+    } catch (err) {
+      console.error('Error al solicitar permiso de notificaciones en Android:', err);
+      permission.value = 'denied';
+      return 'denied';
+    }
+  }
+
+  if (!('Notification' in window)) {
     return 'denied';
   }
 
@@ -150,7 +246,27 @@ export function sendNotification(options: {
     }, 6000);
   }
 
-  // Notificación del sistema si hay permisos concedidos
+  // Si estamos en plataforma nativa móvil (Android APK / iOS)
+  if (isNativePlatform()) {
+    ensureAndroidNotificationChannel().then(() => {
+      LocalNotifications.schedule({
+        notifications: [
+          {
+            id: Math.floor(Math.random() * 1000000) + 1,
+            title: options.title,
+            body: options.body,
+            channelId: 'passengo_reminders',
+            schedule: { at: new Date(Date.now() + 100) }
+          }
+        ]
+      }).catch(err => {
+        console.warn('Error al disparar LocalNotifications en Android:', err);
+      });
+    });
+    return;
+  }
+
+  // Notificación del sistema si hay permisos concedidos en Web
   if (typeof window !== 'undefined' && 'Notification' in window && permission.value === 'granted') {
     try {
       new Notification(options.title, {
@@ -317,7 +433,10 @@ export function startNotificationScheduler(
  * Composable de notificaciones para usar en componentes Vue
  */
 export function useNotifications() {
-  const isSupported = computed(() => typeof window !== 'undefined' && 'Notification' in window);
+  const isSupported = computed(() => {
+    if (typeof window === 'undefined') return false;
+    return isNativePlatform() || 'Notification' in window;
+  });
 
   const isGranted = computed(() => permission.value === 'granted');
   const isDenied = computed(() => permission.value === 'denied');
@@ -337,6 +456,8 @@ export function useNotifications() {
     activeInAppToast,
     saveNotificationConfig,
     requestNotificationPermission,
+    checkNotificationPermission,
+    autoPromptNotificationPermissionIfNative,
     playNotificationSound,
     sendNotification,
     dismissToast,

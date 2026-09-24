@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import type { PasajeroCompleto, EstadoPago, Usuario } from '../types';
 import AppHeader from './AppHeader.vue';
 import AppFooter from './AppFooter.vue';
@@ -39,7 +39,36 @@ const modalNotificacionesAbierto = ref(false);
 const modalDescargaAppAbierto = ref(false);
 const bannerPermisosCerrado = ref(false);
 
-const { permission, requestNotificationPermission, activeInAppToast, dismissToast, startNotificationScheduler } = useNotifications();
+const {
+  permission,
+  requestNotificationPermission,
+  activeInAppToast,
+  dismissToast,
+  startNotificationScheduler,
+  autoPromptNotificationPermissionIfNative
+} = useNotifications();
+
+let stopScheduler: (() => void) | null = null;
+
+onMounted(() => {
+  // En app móvil nativa, solicitar permiso automáticamente si aún no se ha consultado
+  autoPromptNotificationPermissionIfNative();
+
+  // Iniciar scheduler de recordatorios automáticos de recogida
+  stopScheduler = startNotificationScheduler(
+    () => pasajeros.value,
+    () => ({
+      reminderTitle: t.value.notifications.reminderNotificationTitle,
+      reminderBody: t.value.notifications.reminderNotificationBody
+    })
+  );
+});
+
+onUnmounted(() => {
+  if (stopScheduler) {
+    stopScheduler();
+  }
+});
 
 async function solicitarPermisosCompletos() {
   try {
@@ -564,25 +593,29 @@ onMounted(() => {
       <Teleport to="body">
         <div
           v-if="activeInAppToast"
-          class="fixed top-5 right-3 sm:right-5 z-50 max-w-sm w-full p-4 bg-white dark:bg-slate-800 border-2 border-amber-500 rounded-2xl shadow-2xl flex items-start gap-3 animate-in slide-in-from-top-4 duration-300"
+          class="fixed z-[9999] left-1/2 -translate-x-1/2 w-[calc(100%-1.5rem)] max-w-md p-4 bg-white dark:bg-slate-900 border-2 border-amber-500 rounded-2xl shadow-2xl flex items-start gap-3.5 transition-all duration-300 pointer-events-auto"
+          style="top: max(2.25rem, calc(env(safe-area-inset-top, 0px) + 0.75rem));"
         >
-          <div class="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-500 flex items-center justify-center shrink-0 text-lg">
+          <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-500 flex items-center justify-center shrink-0 text-xl shadow-inner">
             🔔
           </div>
           <div class="min-w-0 flex-1">
-            <h4 class="text-xs font-bold text-slate-900 dark:text-white leading-tight">
+            <h4 class="text-sm font-bold text-slate-900 dark:text-white leading-snug break-words">
               {{ activeInAppToast.title }}
             </h4>
-            <p class="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-normal">
+            <p class="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed break-words">
               {{ activeInAppToast.body }}
             </p>
           </div>
           <button
             type="button"
             @click="dismissToast"
-            class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-sm p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+            class="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0 cursor-pointer"
+            aria-label="Cerrar notificación"
           >
-            ✕
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
         </div>
       </Teleport>

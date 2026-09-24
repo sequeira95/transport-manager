@@ -3,6 +3,7 @@ import { ref, computed, watch, onUnmounted } from 'vue';
 import type { PasajeroCompleto } from '../types';
 import { useNotifications } from '../lib/notifications';
 import { useI18n } from '../lib/i18n';
+import { isNativePlatform } from '../lib/platform';
 
 const props = defineProps<{
   isOpen: boolean;
@@ -23,22 +24,25 @@ const {
   isDefault,
   saveNotificationConfig,
   requestNotificationPermission,
+  checkNotificationPermission,
   playNotificationSound,
   sendNotification,
   getUpcomingPickups,
   getDiaSemanaHoy
 } = useNotifications();
 
+const esNativo = computed(() => isNativePlatform());
 const testFeedback = ref<string | null>(null);
 const leadTimeOptions = [10, 15, 30, 45, 60];
 
-// Bloqueo de scroll en body al abrir el modal
+// Bloqueo de scroll en body al abrir el modal y refresco de permisos
 watch(
   () => props.isOpen,
   (val) => {
     if (typeof document !== 'undefined') {
       if (val) {
         document.body.style.overflow = 'hidden';
+        checkNotificationPermission();
       } else {
         document.body.style.overflow = '';
       }
@@ -142,12 +146,12 @@ const diaHoyNombre = computed(() => {
         <!-- Modal Body (scrollable) -->
         <div class="p-5 sm:p-6 overflow-y-auto space-y-6 text-slate-800 dark:text-slate-200">
           
-          <!-- SECCIÓN 1: ESTADO DE PERMISOS DEL NAVEGADOR -->
+          <!-- SECCIÓN 1: ESTADO DE PERMISOS -->
           <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 space-y-3">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
               <div>
                 <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                  {{ t.notifications.permissionStatus }}
+                  {{ esNativo ? t.notifications.permissionStatusApp : t.notifications.permissionStatus }}
                 </span>
                 <div class="flex items-center gap-2 mt-1">
                   <span
@@ -185,7 +189,7 @@ const diaHoyNombre = computed(() => {
                   <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                   </svg>
-                  <span>{{ t.notifications.requestPermissionBtn }}</span>
+                  <span>{{ esNativo ? t.notifications.requestPermissionAppBtn : t.notifications.requestPermissionBtn }}</span>
                 </button>
 
                 <button
@@ -200,6 +204,12 @@ const diaHoyNombre = computed(() => {
                   <span>{{ t.notifications.sendTestBtn }}</span>
                 </button>
               </div>
+            </div>
+
+            <!-- Guía si el permiso está denegado en móvil -->
+            <div v-if="isDenied && esNativo" class="text-[11px] sm:text-xs text-amber-700 dark:text-amber-300 bg-amber-500/10 border border-amber-500/20 p-2.5 rounded-xl flex items-start gap-2">
+              <span class="shrink-0 text-sm">ℹ️</span>
+              <p class="leading-relaxed">{{ t.notifications.permissionDeniedAppHelp }}</p>
             </div>
 
             <!-- Toast de feedback al probar -->

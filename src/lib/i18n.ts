@@ -180,10 +180,13 @@ export interface Translations {
     subtitle: string;
     bellTooltip: string;
     permissionStatus: string;
+    permissionStatusApp: string;
     permissionGranted: string;
     permissionDenied: string;
     permissionDefault: string;
     requestPermissionBtn: string;
+    requestPermissionAppBtn: string;
+    permissionDeniedAppHelp: string;
     sendTestBtn: string;
     testSent: string;
     globalSettings: string;
@@ -415,10 +418,13 @@ export const dictionaries: Record<SupportedLocale, Translations> = {
       subtitle: 'Configura avisos automáticos previos a los horarios de recogida de tus pasajeros.',
       bellTooltip: 'Configuración y avisos de recogida',
       permissionStatus: 'Permisos del Navegador',
+      permissionStatusApp: 'Permisos en el Dispositivo',
       permissionGranted: 'Permitidas (Activo)',
       permissionDenied: 'Bloqueadas por el navegador',
       permissionDefault: 'Pendiente de autorización',
       requestPermissionBtn: 'Habilitar Notificaciones Web',
+      requestPermissionAppBtn: 'Habilitar Notificaciones',
+      permissionDeniedAppHelp: 'Para recibirlas, puedes activarlas desde los Ajustes de tu teléfono > Aplicaciones > Passengo > Notificaciones.',
       sendTestBtn: 'Enviar Notificación de Prueba',
       testSent: '¡Notificación de prueba enviada!',
       globalSettings: 'Ajustes Generales',
@@ -648,10 +654,13 @@ export const dictionaries: Record<SupportedLocale, Translations> = {
       subtitle: 'Set up automated alerts prior to each passenger pickup time.',
       bellTooltip: 'Pickup reminder settings & status',
       permissionStatus: 'Browser Notification Permission',
+      permissionStatusApp: 'Device Notification Permission',
       permissionGranted: 'Allowed (Active)',
       permissionDenied: 'Blocked by browser',
       permissionDefault: 'Pending permission',
       requestPermissionBtn: 'Enable Web Notifications',
+      requestPermissionAppBtn: 'Enable Notifications',
+      permissionDeniedAppHelp: 'To receive alerts, you can enable them in your phone Settings > Apps > Passengo > Notifications.',
       sendTestBtn: 'Send Test Notification',
       testSent: 'Test notification sent!',
       globalSettings: 'General Settings',

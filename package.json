@@ -27,6 +27,7 @@
     "@capacitor/android": "^7.0.1",
     "@capacitor/cli": "^7.0.1",
     "@capacitor/core": "^7.0.1",
+    "@capacitor/local-notifications": "^7.0.7",
     "astro": "^4.16.18",
     "leaflet": "^1.9.4",
     "lucide-vue-next": "^0.475.0",
