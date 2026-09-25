@@ -88,6 +88,7 @@ export interface Translations {
     whatsapp: string;
     stops: string;
     weeklySchedule: string;
+    routeMap: string;
     viewReceipts: string;
     edit: string;
     pause: string;
@@ -362,6 +363,7 @@ export const dictionaries: Record<SupportedLocale, Translations> = {
       whatsapp: 'WhatsApp',
       stops: 'Paradas',
       weeklySchedule: 'Itinerario Semanal',
+      routeMap: 'Mapa de Recorrido',
       viewReceipts: 'Ver recibos',
       edit: 'Editar',
       pause: 'Pausar',
@@ -634,6 +636,7 @@ export const dictionaries: Record<SupportedLocale, Translations> = {
       whatsapp: 'WhatsApp',
       stops: 'Stops',
       weeklySchedule: 'Weekly Schedule',
+      routeMap: 'Route Map',
       viewReceipts: 'View receipts',
       edit: 'Edit',
       pause: 'Pause',

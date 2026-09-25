@@ -517,7 +517,7 @@ onMounted(async () => {
       </div>
 
       <!-- Grid de Tarjetas Unificadas de Pasajero -->
-      <div v-if="pasajerosFiltrados.length > 0" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-6">
+      <div v-if="pasajerosFiltrados.length > 0" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-6 items-start">
         <TarjetaPasajero
           v-for="p in pasajerosFiltrados"
           :key="p.id"

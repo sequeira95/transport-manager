@@ -465,7 +465,7 @@ const whatsappUrl = computed(() => {
 <template>
   <div 
     :class="[
-      'group relative bg-white dark:bg-slate-800/90 backdrop-blur-md rounded-2xl border transition-all duration-300 shadow-sm hover:shadow-md dark:shadow-card dark:hover:shadow-card-hover overflow-hidden flex flex-col justify-between',
+      'group relative bg-white dark:bg-slate-800/90 backdrop-blur-md rounded-2xl border transition-all duration-300 shadow-sm hover:shadow-md dark:shadow-card dark:hover:shadow-card-hover overflow-hidden flex flex-col',
       activoLocal ? 'border-slate-200 dark:border-slate-700/80 hover:border-brand-500/60' : 'border-slate-200 dark:border-slate-800 opacity-75 bg-slate-50 dark:bg-slate-850/80'
     ]"
   >
@@ -865,7 +865,7 @@ const whatsappUrl = computed(() => {
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
-            {{ t.card.weeklySchedule }}
+            {{ t.card.routeMap || t.card.weeklySchedule }}
           </span>
 
           <div class="flex items-center gap-2">
@@ -903,7 +903,7 @@ const whatsappUrl = computed(() => {
     </div>
 
     <!-- Footer rápido de la tarjeta -->
-    <div class="px-4 sm:px-5 py-2.5 sm:py-3 bg-slate-50 dark:bg-slate-900/90 border-t border-slate-200 dark:border-slate-700/60 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+    <div class="mt-auto px-4 sm:px-5 py-2.5 sm:py-3 bg-slate-50 dark:bg-slate-900/90 border-t border-slate-200 dark:border-slate-700/60 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
       <span class="truncate max-w-[160px] sm:max-w-[220px]" :title="pasajero.notas || ''">
         📝 {{ pasajero.notas || '--' }}
       </span>
