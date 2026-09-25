@@ -121,15 +121,6 @@ function handleFallbackDownload() {
 
         <!-- Cuerpo del Modal -->
         <div class="p-5 sm:p-6 overflow-y-auto space-y-5">
-          <!-- Beneficio de actualización en caché privada -->
-          <div class="p-3.5 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/40 rounded-2xl flex items-start gap-3">
-            <span class="text-xl">✨</span>
-            <div class="text-xs text-emerald-900 dark:text-emerald-200 leading-relaxed">
-              <strong class="font-bold block mb-0.5">Actualización Limpia y Directa</strong>
-              {{ t.mobileApp.inAppUpdateDesc }}
-            </div>
-          </div>
-
           <!-- Novedades de la Versión (Changelog) -->
           <div class="space-y-2">
             <h4 class="text-xs font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">

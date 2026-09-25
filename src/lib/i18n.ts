@@ -261,7 +261,6 @@ export interface Translations {
     versionChange: string;
     releaseNotesTitle: string;
     noReleaseNotes: string;
-    inAppUpdateDesc: string;
     downloadAndInstallBtn: string;
     downloadingProgress: string;
     installingStatus: string;
@@ -536,7 +535,6 @@ export const dictionaries: Record<SupportedLocale, Translations> = {
       versionChange: 'Versión actual: {from} ➔ Nueva: {to}',
       releaseNotesTitle: 'Novedades de esta versión',
       noReleaseNotes: 'Mejoras de rendimiento y correcciones generales.',
-      inAppUpdateDesc: 'La actualización se descargará directamente en la memoria temporal de la app sin duplicar archivos ni llenar tu carpeta de descargas.',
       downloadAndInstallBtn: 'Descargar e Instalar Ahora',
       downloadingProgress: 'Descargando actualización ({percent}%)...',
       installingStatus: 'Abriendo instalador del sistema Android...',
@@ -809,7 +807,6 @@ export const dictionaries: Record<SupportedLocale, Translations> = {
       versionChange: 'Current: {from} ➔ New: {to}',
       releaseNotesTitle: 'What\'s new in this release',
       noReleaseNotes: 'Performance improvements and bug fixes.',
-      inAppUpdateDesc: 'The update will be downloaded directly to temporary app cache without duplicating files or cluttering your Downloads folder.',
       downloadAndInstallBtn: 'Download & Install Now',
       downloadingProgress: 'Downloading update ({percent}%)...',
       installingStatus: 'Launching Android package installer...',
