@@ -24,7 +24,7 @@ export interface AppUpdaterPluginInterface {
 
 export const NativeAppUpdater = registerPlugin<AppUpdaterPluginInterface>('AppUpdaterPlugin');
 
-export const CURRENT_VERSION = 'v1.0.2';
+export const CURRENT_VERSION = 'v1.0.3';
 const REPO_RELEASES_URL = 'https://api.github.com/repos/sequeira95/transport-manager/releases/latest';
 export const DIRECT_APK_DOWNLOAD_URL = 'https://github.com/sequeira95/transport-manager/releases/latest/download/Passengo.apk';
 

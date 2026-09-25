@@ -529,7 +529,7 @@ export const dictionaries: Record<SupportedLocale, Translations> = {
       updateBtn: 'Actualizar App',
       dismiss: 'Descartar',
       versionInfo: 'Versión actual: {version}',
-      appUpToDate: 'App al día (v{version})',
+      appUpToDate: 'App al día ({version})',
       checkUpdates: 'Buscar actualizaciones',
       modalUpdateTitle: 'Actualización Disponible',
       modalUpdateSubtitle: 'Una nueva versión de Passengo está lista para ti.',
