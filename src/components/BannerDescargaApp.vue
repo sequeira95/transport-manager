@@ -23,27 +23,22 @@ onMounted(async () => {
     // Limpiar caché vieja si la hubiera al iniciar
     cleanUpdateCache();
 
-    // 1. Comprobar si hay actualización disponible
-    const res = await checkForAppUpdates();
-    if (res?.hasUpdate) {
-      visible.value = true;
-      return;
-    }
-
-    // 2. Si estamos dentro del APK nativo, NO mostrar la burbuja para descargar APK
+    // 1. Si estamos dentro del APK nativo (Android), verificar si hay actualización del binario
     if (isNative.value) {
-      visible.value = false;
+      const res = await checkForAppUpdates();
+      visible.value = Boolean(res?.hasUpdate);
       return;
     }
 
-    // 3. Si estamos en navegador móvil web y no se ha descartado, mostrar invitación a descargar APK
-    const dismissed = localStorage.getItem(DISMISS_KEY);
-    if (isMobileWeb && !dismissed) {
-      visible.value = true;
-    } else {
-      // En navegador de escritorio / PC: no mostrar la burbuja flotante
-      visible.value = false;
+    // 2. Si estamos en navegador móvil web y no se ha descartado, mostrar banner para descargar el APK
+    if (isMobileWeb) {
+      const dismissed = localStorage.getItem(DISMISS_KEY);
+      visible.value = !dismissed;
+      return;
     }
+
+    // 3. En navegador de escritorio / PC: jamás mostrar la burbuja de actualización ni de descarga
+    visible.value = false;
   }
 });
 

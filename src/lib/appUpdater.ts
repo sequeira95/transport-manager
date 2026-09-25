@@ -59,6 +59,12 @@ export function closeUpdateModal() {
 export async function checkForAppUpdates(): Promise<AppUpdateInfo | null> {
   if (typeof window === 'undefined') return null;
 
+  // En la versión web (navegadores de PC o móviles) la web siempre está al día; no se actualiza APK
+  if (!isNativePlatform()) {
+    updateInfo.value = null;
+    return null;
+  }
+
   isCheckingUpdate.value = true;
   try {
     const res = await fetch(REPO_RELEASES_URL, {
