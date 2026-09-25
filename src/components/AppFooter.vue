@@ -4,6 +4,7 @@ import type { Usuario } from '../types';
 import { useI18n } from '../lib/i18n';
 import { isNativePlatform } from '../lib/platform';
 import { updateInfo, checkForAppUpdates, openUpdateModal } from '../lib/appUpdater';
+import { APP_VERSION } from '../lib/version';
 
 const props = defineProps<{
   usuarioActual: Usuario | null;
@@ -211,7 +212,7 @@ async function handleCheckUpdate() {
           </button>
 
           <span class="px-2 py-0.5 rounded-md bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 font-mono text-slate-600 dark:text-slate-300 text-[10px] shadow-sm">
-            v1.0.3 {{ t.footer.version }}
+            {{ APP_VERSION }} {{ t.footer.version }}
           </span>
         </div>
       </div>

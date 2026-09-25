@@ -15,6 +15,7 @@ import {
   DIRECT_APK_DOWNLOAD_URL
 } from '../lib/appUpdater';
 import { isNativePlatform } from '../lib/platform';
+import { APP_VERSION } from '../lib/version';
 
 const { t } = useI18n();
 const isNative = ref(false);
@@ -105,9 +106,9 @@ function handleFallbackDownload() {
             </div>
             <div>
               <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/20 text-[10px] font-bold tracking-wider uppercase mb-1">
-                <span>{{ updateInfo?.currentVersion || 'v1.0.3' }}</span>
+                <span>{{ updateInfo?.currentVersion || APP_VERSION }}</span>
                 <span>➔</span>
-                <span class="text-emerald-200">{{ updateInfo?.latestVersion || 'v1.0.3' }}</span>
+                <span class="text-emerald-200">{{ updateInfo?.latestVersion || APP_VERSION }}</span>
               </div>
               <h2 class="text-lg sm:text-xl font-black leading-tight">
                 {{ t.mobileApp.modalUpdateTitle }}
@@ -285,7 +286,7 @@ function handleFallbackDownload() {
         <!-- Footer del Modal -->
         <div class="p-4 bg-slate-50 dark:bg-slate-800/40 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
           <span class="text-[11px] text-slate-500 dark:text-slate-400">
-            Passengo • {{ updateInfo?.latestVersion || 'v1.0.3' }}
+            Passengo • {{ updateInfo?.latestVersion || APP_VERSION }}
           </span>
           <button
             v-if="downloadStatus !== 'downloading'"

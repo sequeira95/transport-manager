@@ -2,6 +2,7 @@
 import { ref, watch, onMounted, onUnmounted } from 'vue';
 import { useI18n } from '../lib/i18n';
 import { DIRECT_APK_DOWNLOAD_URL } from '../lib/appUpdater';
+import { APP_VERSION } from '../lib/version';
 
 const props = defineProps<{
   isOpen: boolean;
@@ -100,7 +101,7 @@ onUnmounted(() => {
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
               </svg>
               <span>{{ t.mobileApp.downloadBtn }}</span>
-              <span class="px-2 py-0.5 rounded-full bg-white/20 text-xs font-mono">v1.0.3</span>
+              <span class="px-2 py-0.5 rounded-full bg-white/20 text-xs font-mono">{{ APP_VERSION }}</span>
             </a>
 
             <p class="text-[11px] text-slate-500 dark:text-slate-400">

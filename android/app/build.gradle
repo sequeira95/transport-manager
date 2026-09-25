@@ -1,4 +1,27 @@
 apply plugin: 'com.android.application'
+import groovy.json.JsonSlurper
+
+def getPackageVersion() {
+    def pkgJsonFile = file('../../package.json')
+    if (pkgJsonFile.exists()) {
+        def pkg = new JsonSlurper().parseText(pkgJsonFile.text)
+        return pkg.version
+    }
+    return "1.0.0"
+}
+
+def getPackageVersionCode() {
+    def ver = getPackageVersion()
+    def parts = ver.tokenize('.')
+    if (parts.size() >= 3) {
+        try {
+            return parts[0].toInteger() * 10000 + parts[1].toInteger() * 100 + parts[2].toInteger()
+        } catch (Exception ignored) {
+            return 10000
+        }
+    }
+    return 10000
+}
 
 android {
     namespace "com.transportmanager.app"
@@ -7,8 +30,8 @@ android {
         applicationId "com.transportmanager.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 4
-        versionName "1.0.3"
+        versionCode getPackageVersionCode()
+        versionName getPackageVersion()
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
