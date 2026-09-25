@@ -12,5 +12,10 @@
       "keystorePath": "",
       "releaseType": "AAB"
     }
+  },
+  "plugins": {
+    "CapacitorUpdater": {
+      "autoUpdate": false
+    }
   }
 }

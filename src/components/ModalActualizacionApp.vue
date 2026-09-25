@@ -214,10 +214,28 @@ function handleFallbackDownload() {
             <div class="w-8 h-8 rounded-full border-3 border-emerald-500 border-t-transparent animate-spin shrink-0"></div>
             <div>
               <h5 class="text-xs font-bold text-emerald-950 dark:text-emerald-100">
-                {{ t.mobileApp.installingStatus }}
+                {{ updateInfo?.isOtaAvailable ? 'Aplicando actualización instantánea...' : t.mobileApp.installingStatus }}
               </h5>
               <p class="text-xs text-emerald-800 dark:text-emerald-300 mt-0.5 leading-relaxed">
-                {{ t.mobileApp.installingHint }}
+                {{ updateInfo?.isOtaAvailable ? 'Reiniciando la app con las mejoras...' : t.mobileApp.installingHint }}
+              </p>
+            </div>
+          </div>
+
+          <!-- ESTADO: Completado / Reiniciando -->
+          <div
+            v-else-if="downloadStatus === 'success'"
+            class="p-4 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-700/50 rounded-2xl flex items-center gap-3.5"
+          >
+            <div class="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold text-base shrink-0">
+              ✓
+            </div>
+            <div>
+              <h5 class="text-xs font-bold text-emerald-950 dark:text-emerald-100">
+                ¡Actualización lista!
+              </h5>
+              <p class="text-xs text-emerald-800 dark:text-emerald-300 mt-0.5 leading-relaxed">
+                Reiniciando la aplicación en un segundo...
               </p>
             </div>
           </div>

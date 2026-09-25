@@ -1,12 +1,16 @@
 import { ref } from 'vue';
 import { registerPlugin } from '@capacitor/core';
+import { CapacitorUpdater } from '@capgo/capacitor-updater';
 import { isNativePlatform } from './platform';
+import { APP_VERSION } from './version';
 
 export interface AppUpdateInfo {
   hasUpdate: boolean;
   currentVersion: string;
   latestVersion: string;
   downloadUrl: string;
+  otaDownloadUrl?: string;
+  isOtaAvailable: boolean;
   releaseNotes: string;
   publishedAt: string;
 }
@@ -21,8 +25,6 @@ export interface AppUpdaterPluginInterface {
     listenerFunc: (progress: { percent: number; bytes: number; total: number; status: string }) => void
   ): Promise<{ remove: () => Promise<void> }>;
 }
-
-import { APP_VERSION } from './version';
 
 export const NativeAppUpdater = registerPlugin<AppUpdaterPluginInterface>('AppUpdaterPlugin');
 
@@ -43,20 +45,27 @@ export const totalBytes = ref(0);
 
 let progressListenerHandle: { remove: () => Promise<void> } | null = null;
 
+// Notificar a Capgo al iniciar la app para confirmar que el bundle actual funciona correctamente
+if (typeof window !== 'undefined' && isNativePlatform()) {
+  try {
+    CapacitorUpdater.notifyAppReady().catch(() => {});
+  } catch (_) {}
+}
+
 export function openUpdateModal() {
   isUpdateModalOpen.value = true;
 }
 
 export function closeUpdateModal() {
-  if (downloadStatus.value === 'downloading') {
-    // Evitar cerrar accidentalmente mientras se descarga el binario
+  if (downloadStatus.value === 'downloading' || downloadStatus.value === 'installing') {
+    // Evitar cerrar accidentalmente mientras se procesa la actualización
     return;
   }
   isUpdateModalOpen.value = false;
 }
 
 /**
- * Consulta a GitHub Releases para verificar si existe un nuevo APK
+ * Consulta a GitHub Releases para verificar si existe una nueva versión
  */
 export async function checkForAppUpdates(): Promise<AppUpdateInfo | null> {
   if (typeof window === 'undefined') return null;
@@ -85,12 +94,18 @@ export async function checkForAppUpdates(): Promise<AppUpdateInfo | null> {
     const releaseBody = data.body || '';
     const publishedAt = data.published_at || '';
 
-    // Buscar el activo .apk en los assets
+    // Buscar tanto el paquete OTA (dist.zip) como el APK tradicional
     let apkDownloadUrl = DIRECT_APK_DOWNLOAD_URL;
+    let otaDownloadUrl = '';
+
     if (Array.isArray(data.assets)) {
       const apkAsset = data.assets.find((a: any) => a.name?.endsWith('.apk'));
       if (apkAsset && apkAsset.browser_download_url) {
         apkDownloadUrl = apkAsset.browser_download_url;
+      }
+      const otaAsset = data.assets.find((a: any) => a.name === 'dist.zip' || a.name?.endsWith('.zip'));
+      if (otaAsset && otaAsset.browser_download_url) {
+        otaDownloadUrl = otaAsset.browser_download_url;
       }
     }
 
@@ -107,6 +122,8 @@ export async function checkForAppUpdates(): Promise<AppUpdateInfo | null> {
       currentVersion: CURRENT_VERSION,
       latestVersion: tagName || CURRENT_VERSION,
       downloadUrl: apkDownloadUrl,
+      otaDownloadUrl: otaDownloadUrl || undefined,
+      isOtaAvailable: Boolean(otaDownloadUrl),
       releaseNotes: releaseBody,
       publishedAt
     };
@@ -122,34 +139,78 @@ export async function checkForAppUpdates(): Promise<AppUpdateInfo | null> {
 
 /**
  * Inicia el proceso de actualización In-App:
- * En Android nativo: descarga directamente a caché privada y abre el instalador del sistema.
- * En Web / PC: abre el enlace directo de descarga.
+ * 1. Prioridad: Actualización Instantánea OTA (Capgo) si dist.zip está disponible.
+ * 2. Fallback: Descarga e instalación de APK nativo de Android.
  */
 export async function startInAppUpdate() {
-  const url = updateInfo.value?.downloadUrl || DIRECT_APK_DOWNLOAD_URL;
+  const otaUrl = updateInfo.value?.otaDownloadUrl;
+  const apkUrl = updateInfo.value?.downloadUrl || DIRECT_APK_DOWNLOAD_URL;
 
   if (!isNativePlatform()) {
     if (typeof window !== 'undefined') {
-      window.open(url, '_blank');
+      window.open(apkUrl, '_blank');
     }
     return;
   }
 
-  downloadStatus.value = 'checking_permission';
+  downloadStatus.value = 'downloading';
   downloadProgress.value = 0;
   downloadedBytes.value = 0;
   totalBytes.value = 0;
   downloadErrorMsg.value = '';
 
+  // 1. PRIORIDAD: ACTUALIZACIÓN INSTANTÁNEA OTA (dist.zip)
+  if (otaUrl && updateInfo.value?.isOtaAvailable) {
+    let removeListener: (() => void) | null = null;
+    try {
+      const handle = await CapacitorUpdater.addListener('download', (info: any) => {
+        if (typeof info?.percent === 'number') {
+          downloadProgress.value = Math.min(100, Math.round(info.percent));
+        }
+      });
+      removeListener = () => { handle.remove(); };
+    } catch (_) {}
+
+    try {
+      const targetVersion = (updateInfo.value?.latestVersion || CURRENT_VERSION).replace(/^v/, '');
+      const versionBundle = await CapacitorUpdater.download({
+        url: otaUrl,
+        version: targetVersion
+      });
+
+      downloadProgress.value = 100;
+      downloadStatus.value = 'installing';
+
+      await CapacitorUpdater.set(versionBundle);
+      downloadStatus.value = 'success';
+
+      // Recargar la aplicación para aplicar inmediatamente los cambios sin salir
+      setTimeout(async () => {
+        try {
+          await CapacitorUpdater.reload();
+        } catch (_) {
+          if (typeof window !== 'undefined') {
+            window.location.reload();
+          }
+        }
+      }, 1000);
+      return;
+    } catch (otaErr: any) {
+      console.warn('Actualización OTA falló, recurriendo al instalador APK:', otaErr);
+      // Fallback automático al instalador de APK si OTA falla
+    } finally {
+      if (removeListener) removeListener();
+    }
+  }
+
+  // 2. FALLBACK: ACTUALIZACIÓN NATIVA MEDIANTE INSTALACIÓN DE APK
   try {
-    // 1. Verificar permisos de instalación de paquetes desconocidos
     const check = await NativeAppUpdater.canRequestPackageInstalls();
     if (!check.canInstall) {
       downloadStatus.value = 'permission_denied';
       return;
     }
 
-    // 2. Suscribirse al evento de progreso
     if (progressListenerHandle) {
       try {
         await progressListenerHandle.remove();
@@ -165,14 +226,13 @@ export async function startInAppUpdate() {
       }
     });
 
-    // 3. Ejecutar descarga e instalación nativa
     downloadStatus.value = 'downloading';
-    const res = await NativeAppUpdater.downloadAndInstall({ url });
+    const res = await NativeAppUpdater.downloadAndInstall({ url: apkUrl });
     if (res.success) {
       downloadStatus.value = 'installing';
     }
   } catch (err: any) {
-    console.error('Error durante actualización in-app:', err);
+    console.error('Error durante actualización in-app de APK:', err);
     downloadStatus.value = 'error';
     downloadErrorMsg.value = err?.message || 'Error desconocido al actualizar';
   }

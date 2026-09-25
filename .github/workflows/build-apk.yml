@@ -73,7 +73,9 @@ jobs:
             - **Descarga directa:** Haz clic en `Passengo.apk` para instalar.
             - **Compatibilidad:** Android 8.0 o superior.
             - **Compilacion:** ${{ github.sha }}
-          files: Passengo.apk
+          files: |
+            Passengo.apk
+            dist.zip
           prerelease: false
           draft: false
         env:

@@ -39,6 +39,7 @@ android/app/src/main/assets/public/
 android/app/src/main/assets/capacitor.plugins.json
 *.apk
 *.aab
+dist.zip
 *.keystore
 *.jks
 !android/app/passengo.keystore
