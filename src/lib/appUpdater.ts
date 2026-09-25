@@ -138,6 +138,27 @@ export async function checkForAppUpdates(): Promise<AppUpdateInfo | null> {
 }
 
 /**
+ * Descarga y prepara una actualización OTA de forma 100% silenciosa en segundo plano.
+ * El nuevo bundle se activará automáticamente la próxima vez que se abra la app,
+ * sin interrumpir al usuario ni mostrar ningún cartel.
+ */
+export async function performSilentOtaUpdate(otaUrl: string, latestVersion: string) {
+  if (!isNativePlatform() || !otaUrl) return;
+  try {
+    const targetVersion = latestVersion.replace(/^v/, '');
+    const versionBundle = await CapacitorUpdater.download({
+      url: otaUrl,
+      version: targetVersion
+    });
+    // Deja el paquete activado para el próximo arranque/cold start
+    await CapacitorUpdater.set(versionBundle);
+    console.log(`[OTA Silencioso] Versión ${latestVersion} descargada y lista para el próximo inicio.`);
+  } catch (err) {
+    console.warn('[OTA Silencioso] No se pudo descargar en segundo plano:', err);
+  }
+}
+
+/**
  * Inicia el proceso de actualización In-App:
  * 1. Prioridad: Actualización Instantánea OTA (Capgo) si dist.zip está disponible.
  * 2. Fallback: Descarga e instalación de APK nativo de Android.

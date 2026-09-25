@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue';
 import type { Usuario } from '../types';
 import { useI18n } from '../lib/i18n';
 import { isNativePlatform } from '../lib/platform';
-import { updateInfo, checkForAppUpdates, openUpdateModal } from '../lib/appUpdater';
+import { updateInfo, checkForAppUpdates, performSilentOtaUpdate, openUpdateModal } from '../lib/appUpdater';
 import { APP_VERSION } from '../lib/version';
 
 const props = defineProps<{
@@ -35,7 +35,15 @@ async function handleCheckUpdate() {
   const res = await checkForAppUpdates();
   checkingUpdate.value = false;
   if (res?.hasUpdate) {
-    openUpdateModal();
+    if (res.isOtaAvailable && res.otaDownloadUrl) {
+      await performSilentOtaUpdate(res.otaDownloadUrl, res.latestVersion);
+      updateMessage.value = '¡Mejoras descargadas! Se aplicarán la próxima vez que abras la app.';
+      setTimeout(() => {
+        updateMessage.value = null;
+      }, 5000);
+    } else {
+      openUpdateModal();
+    }
   } else {
     updateMessage.value = t.value.mobileApp.appUpToDate.replace('{version}', res?.currentVersion || '1.0.0');
     setTimeout(() => {
@@ -201,14 +209,14 @@ async function handleCheckUpdate() {
             <span>Descargar APK</span>
           </button>
 
-          <!-- En APK: Si hay actualización disponible, botón para abrir modal -->
+          <!-- En APK: Si hay actualización OBLIGATORIA de APK (no OTA), botón para abrir modal -->
           <button
-            v-else-if="updateInfo?.hasUpdate"
+            v-else-if="updateInfo?.hasUpdate && !updateInfo?.isOtaAvailable"
             type="button"
             @click="openUpdateModal()"
             class="text-emerald-600 dark:text-teal-400 hover:underline flex items-center gap-1 cursor-pointer font-bold animate-pulse"
           >
-            <span>🔄 Actualizar (v{{ updateInfo.latestVersion }})</span>
+            <span>🔄 Actualizar APK (v{{ updateInfo.latestVersion }})</span>
           </button>
 
           <span class="px-2 py-0.5 rounded-md bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 font-mono text-slate-600 dark:text-slate-300 text-[10px] shadow-sm">

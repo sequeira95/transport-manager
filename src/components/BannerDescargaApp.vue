@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useI18n } from '../lib/i18n';
-import { updateInfo, checkForAppUpdates, DIRECT_APK_DOWNLOAD_URL, openUpdateModal, cleanUpdateCache } from '../lib/appUpdater';
+import { updateInfo, checkForAppUpdates, performSilentOtaUpdate, DIRECT_APK_DOWNLOAD_URL, openUpdateModal, cleanUpdateCache } from '../lib/appUpdater';
 import { isNativePlatform, isMobileBrowser } from '../lib/platform';
 
 const emit = defineEmits<{
@@ -23,9 +23,16 @@ onMounted(async () => {
     // Limpiar caché vieja si la hubiera al iniciar
     cleanUpdateCache();
 
-    // 1. Si estamos dentro del APK nativo (Android), verificar si hay actualización del binario
+    // 1. Si estamos dentro del APK nativo (Android)
     if (isNative.value) {
       const res = await checkForAppUpdates();
+      // Si la actualización es OTA: descargar de forma 100% invisible en segundo plano
+      if (res?.hasUpdate && res.isOtaAvailable && res.otaDownloadUrl) {
+        performSilentOtaUpdate(res.otaDownloadUrl, res.latestVersion);
+        visible.value = false;
+        return;
+      }
+      // Solo si la actualización requiere APK obligatorio: mostrar el banner
       visible.value = Boolean(res?.hasUpdate);
       return;
     }
